@@ -4,9 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.quasar.mobile.viewmodel.AuthViewModel
+import com.quasar.mobile.viewmodel.BackupViewModel
 
 @Composable
-fun QuasarApp() {
+fun QuasarApp(authViewModel: AuthViewModel, backupViewModel: BackupViewModel) {
     QuasarTheme {
         val navController = rememberNavController()
 
@@ -15,56 +17,69 @@ fun QuasarApp() {
                 OnboardingScreen(onContinue = { navController.navigate("auth_choice") })
             }
             composable("auth_choice") {
-                Column(
-                    modifier = androidx.compose.foundation.layout.Modifier
-                        .fillMaxSize()
-                        .background(QuasarColors.midnight)
-                        .padding(24.dp),
-                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
-                ) {
-                    Button(
-                        onClick = { navController.navigate("sign_up") },
-                        modifier = androidx.compose.foundation.layout.Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = QuasarColors.accent),
-                    ) {
-                        Text("Create account")
-                    }
-                    Spacer(modifier = androidx.compose.foundation.layout.Modifier.height(12.dp))
-                    OutlinedButton(
-                        onClick = { navController.navigate("sign_in") },
-                        modifier = androidx.compose.foundation.layout.Modifier.fillMaxWidth(),
-                    ) {
-                        Text("Sign in")
-                    }
-                }
+                AuthChoiceScreen(
+                    onSignUp = { navController.navigate("sign_up") },
+                    onSignIn = { navController.navigate("sign_in") },
+                )
             }
             composable("sign_up") {
-                SignUpScreen(onContinue = { navController.navigate("cloud") })
+                SignUpScreen(
+                    authViewModel = authViewModel,
+                    onContinue = { navController.navigate("cloud") }
+                )
             }
             composable("sign_in") {
-                SignInScreen(onContinue = { navController.navigate("cloud") })
+                SignInScreen(
+                    authViewModel = authViewModel,
+                    onContinue = { navController.navigate("cloud") }
+                )
             }
             composable("cloud") {
-                CloudSelectionScreen(onContinue = { navController.navigate("adb") })
+                CloudSelectionScreen(
+                    backupViewModel = backupViewModel,
+                    onContinue = { navController.navigate("adb") }
+                )
             }
             composable("adb") {
                 AdbGuidanceScreen(onComplete = { navController.navigate("status") })
             }
             composable("status") {
-                UploadStatusScreen()
+                UploadStatusScreen(backupViewModel)
             }
         }
     }
 }
 
+@Composable
+fun AuthChoiceScreen(onSignUp: () -> Unit, onSignIn: () -> Unit) {
+    androidx.compose.foundation.layout.Column(
+        modifier = androidx.compose.foundation.layout.Modifier
+            .fillMaxSize()
+            .background(QuasarColors.midnight)
+            .padding(24.dp),
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+    ) {
+        androidx.compose.material3.Button(
+            onClick = onSignUp,
+            modifier = androidx.compose.foundation.layout.Modifier.fillMaxWidth(),
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = QuasarColors.accent),
+        ) {
+            androidx.compose.material3.Text("Create account")
+        }
+        androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.foundation.layout.Modifier.height(12.dp))
+        androidx.compose.material3.OutlinedButton(
+            onClick = onSignIn,
+            modifier = androidx.compose.foundation.layout.Modifier.fillMaxWidth(),
+        ) {
+            androidx.compose.material3.Text("Sign in")
+        }
+    }
+}
+
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
