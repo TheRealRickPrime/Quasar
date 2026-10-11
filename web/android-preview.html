@@ -6,14 +6,24 @@
   <title>Quasar Android UI Preview</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700;900&family=Poppins:wght@400;500;600;700;800&family=Rubik:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#070b14;--bg-2:#0e1627;--midnight:#0b1020;--navy:#141c33;--panel:#1a2340;--panel-soft:#101a2e;--paper:#f1f4ff;--steel:#8f9bbd;--accent:#7c5cff;--accent-2:#5eead4;--ok:#2ecc71;--warn:#f5a524;--bad:#ff5d6c;--line:#2a355c;--shadow:rgba(8,11,22,0.55)}
+    :root{
+      --font-body: "Inter", "Segoe UI", sans-serif;
+      --font-heading: "Inter", "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      --bg:#070b14; --bg-2:#0e1627; --midnight:#0b1020; --navy:#141c33; --panel:#1a2340; --panel-soft:#101a2e; --paper:#f1f4ff; --steel:#8f9bbd; --accent:#7c5cff; --accent-2:#5eead4; --ok:#2ecc71; --warn:#f5a524; --bad:#ff5d6c; --line:#2a355c; --shadow:rgba(8,11,22,0.55);
+    }
     *{box-sizing:border-box;margin:0}
     html{scroll-behavior:smooth}
-    body{font-family:Inter,Roboto,system-ui,sans-serif;background:radial-gradient(circle at top,rgba(124,92,255,.18),transparent 25%),linear-gradient(180deg,var(--bg) 0%,#090d18 100%);color:var(--paper);line-height:1.5}
+    body{font-family:var(--font-body);background:radial-gradient(circle at top,rgba(124,92,255,.18),transparent 25%),linear-gradient(180deg,var(--bg) 0%,#090d18 100%);color:var(--paper);line-height:1.5}
+    h1,h2,h3,h4,h5,h6{font-family:var(--font-heading)}
+    code, pre{font-family:var(--font-mono)}
     header{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:center;flex-wrap:wrap;position:sticky;top:0;background:rgba(7,11,20,.84);backdrop-filter:blur(12px);z-index:20}
     header h1{font-size:1.1rem;margin-right:auto;letter-spacing:.04em}
+    .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .toolbar label{display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--steel);background:var(--panel-soft);padding:8px 10px;border:1px solid var(--line);border-radius:10px}
+    .toolbar select{background:var(--navy);color:var(--paper);border:1px solid var(--line);padding:8px 12px;border-radius:10px;font:inherit;outline:none}
     .tabs{display:flex;gap:8px;flex-wrap:wrap}
     .tab{background:var(--panel-soft);color:var(--paper);border:1px solid var(--line);padding:8px 14px;border-radius:12px;cursor:pointer;font-weight:700;transition:all .2s ease}
     .tab:hover{border-color:rgba(124,92,255,.7);transform:translateY(-1px)}
@@ -51,7 +61,7 @@
     .ico{width:34px;height:34px;border-radius:10px;background:rgba(10,15,26,.9);display:grid;place-items:center;font-weight:900}
     .price{color:var(--accent-2);font-weight:800}
     .chip{font-size:.7rem;padding:3px 8px;border-radius:99px;background:rgba(124,92,255,.12);color:#d9d1ff;border:1px solid rgba(124,92,255,.18)}
-    .code{font-family:ui-monospace,Consolas,monospace;font-size:1.05rem;text-align:center;color:var(--accent-2);letter-spacing:.05em;word-break:break-all}
+    .code{font-family:var(--font-mono);font-size:1.05rem;text-align:center;color:var(--accent-2);letter-spacing:.05em;word-break:break-all}
     .nav{display:flex;gap:10px}
     .nav button{background:var(--navy);color:var(--paper);border:1px solid var(--line);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:600}
     .side{background:rgba(20,28,51,.96);border:1px solid var(--line);border-radius:18px;padding:16px;font-size:.88rem;box-shadow:0 18px 40px var(--shadow)}
@@ -59,7 +69,6 @@
     .note{background:rgba(245,165,36,.08);border:1px solid rgba(245,165,36,.35);color:#ffd98a;border-radius:12px;padding:12px 14px;margin:12px 0;font-size:.88rem}
     .note.red{background:rgba(255,93,108,.08);border-color:rgba(255,93,108,.35);color:#ffb3bd}
     .note.green{background:rgba(46,204,113,.08);border-color:rgba(46,204,113,.36);color:#a6f0c4}
-    /* ADB guide */
     .guide{display:grid;grid-template-columns:280px 1fr;gap:24px}
     @media(max-width:900px){.guide{grid-template-columns:1fr}}
     .step{display:block;padding:11px 12px;border-radius:10px;cursor:pointer;color:var(--steel);border:1px solid transparent;transition:all .15s ease}
@@ -69,7 +78,7 @@
     .pane h2{margin-bottom:8px}.pane h3{margin:18px 0 6px;font-size:1.02rem}
     .pane p,.pane li{color:#cdd5f3}.pane ol,.pane ul{margin:8px 0 8px 22px}.pane li{margin:5px 0}
     pre{background:#05070f;border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow-x:auto;font-size:.88rem;position:relative;margin:10px 0;box-shadow:inset 0 1px 0 rgba(255,255,255,.02)}
-    code{font-family:ui-monospace,Consolas,monospace;color:#9fe3ff}
+    code{font-family:var(--font-mono);color:#9fe3ff}
     .copy{position:absolute;top:8px;right:8px;background:linear-gradient(135deg,var(--accent),#8a7dff);border:none;color:#fff;border-radius:7px;padding:3px 9px;font-size:.72rem;cursor:pointer}
     .os{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
     .os button{background:var(--midnight);border:1px solid var(--line);color:var(--steel);padding:6px 14px;border-radius:9px;cursor:pointer}
@@ -86,6 +95,41 @@
 <body>
   <header>
     <h1>🔒 Quasar — Android UI Preview</h1>
+    <div class="toolbar">
+      <label>
+        Theme
+        <select id="themeSelect">
+          <option value="default">Default</option>
+          <option value="premium-dark">Premium Dark</option>
+          <option value="ocean">Ocean</option>
+          <option value="forest">Forest</option>
+          <option value="sunset">Sunset</option>
+          <option value="cyberpunk">Cyberpunk</option>
+          <option value="minimal">Minimal</option>
+          <option value="warm">Warm</option>
+          <option value="cool">Cool</option>
+          <option value="neon">Neon</option>
+          <option value="monochrome">Monochrome</option>
+          <option value="aurora">Aurora</option>
+          <option value="twilight">Twilight</option>
+        </select>
+      </label>
+      <label>
+        Font
+        <select id="fontSelect">
+          <option value="Inter">Inter</option>
+          <option value="Roboto">Roboto</option>
+          <option value="Poppins">Poppins</option>
+          <option value="Rubik">Rubik</option>
+          <option value="Tahoma">Tahoma</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Verdana">Verdana</option>
+          <option value="Playfair Display">Playfair Display</option>
+          <option value="JetBrains Mono">JetBrains Mono</option>
+          <option value="Courier Prime">Courier Prime</option>
+        </select>
+      </label>
+    </div>
     <div class="tabs">
       <button class="tab on" data-v="screens">App screens</button>
       <button class="tab" data-v="adb">ADB backup guide</button>
@@ -93,7 +137,6 @@
   </header>
   <main>
 
-    <!-- ===================== SCREENS ===================== -->
     <section class="view on" id="screens">
       <div class="layout">
         <div class="list" id="list"></div>
@@ -108,7 +151,6 @@
       </div>
     </section>
 
-    <!-- ===================== ADB GUIDE ===================== -->
     <section class="view" id="adb">
       <div class="guide">
         <div class="list" id="steps"></div>
@@ -119,14 +161,120 @@
   </main>
 
   <script>
-    /* ---------- tab switching ---------- */
+    const themeMap = {
+      default: {
+        bg: '#070b14', bg2: '#0e1627', midnight: '#0b1020', navy: '#141c33', panel: '#1a2340', panelSoft: '#101a2e', paper: '#f1f4ff', steel: '#8f9bbd', accent: '#7c5cff', accent2: '#5eead4', ok: '#2ecc71', warn: '#f5a524', bad: '#ff5d6c', line: '#2a355c'
+      },
+      'premium-dark': {
+        bg: '#090910', bg2: '#120f1b', midnight: '#0b0914', navy: '#171420', panel: '#201b2d', panelSoft: '#171420', paper: '#f4efff', steel: '#b1a7d4', accent: '#8b5cf6', accent2: '#d946ef', ok: '#34d399', warn: '#fbbf24', bad: '#fb7185', line: '#3b3153'
+      },
+      ocean: {
+        bg: '#06171d', bg2: '#0b2830', midnight: '#0b1d2a', navy: '#143549', panel: '#1a3d50', panelSoft: '#102d3a', paper: '#edf9ff', steel: '#9ecad4', accent: '#2ec4ff', accent2: '#5eead4', ok: '#2dd4bf', warn: '#fbbf24', bad: '#f87171', line: '#214a5f'
+      },
+      forest: {
+        bg: '#0d1713', bg2: '#12251c', midnight: '#11251a', navy: '#1d392f', panel: '#203a2f', panelSoft: '#173426', paper: '#edf7e7', steel: '#9db7a1', accent: '#3ab77e', accent2: '#8adf78', ok: '#4ade80', warn: '#fbbf24', bad: '#ef4444', line: '#325545'
+      },
+      sunset: {
+        bg: '#180f0d', bg2: '#2a1b16', midnight: '#1d1412', navy: '#3b2420', panel: '#4a2e27', panelSoft: '#2e1f1a', paper: '#fff4eb', steel: '#dfb29a', accent: '#f97316', accent2: '#f59e0b', ok: '#22c55e', warn: '#fbbf24', bad: '#ef4444', line: '#6d3f35'
+      },
+      cyberpunk: {
+        bg: '#070b10', bg2: '#0f1420', midnight: '#05080d', navy: '#111827', panel: '#191f2d', panelSoft: '#101827', paper: '#e5f7ff', steel: '#8ec7d7', accent: '#00f5d4', accent2: '#ff2bd6', ok: '#34d399', warn: '#fbbf24', bad: '#ff5d73', line: '#22304f'
+      },
+      minimal: {
+        bg: '#f3f4f6', bg2: '#e5e7eb', midnight: '#dfe2e8', navy: '#dfe7f1', panel: '#ffffff', panelSoft: '#eef2f7', paper: '#111827', steel: '#6b7280', accent: '#111827', accent2: '#4b5563', ok: '#16a34a', warn: '#d97706', bad: '#dc2626', line: '#d1d5db'
+      },
+      warm: {
+        bg: '#1a120b', bg2: '#2a1f17', midnight: '#1d120d', navy: '#3b2c20', panel: '#4a382d', panelSoft: '#2c1f1a', paper: '#fff7ed', steel: '#d1b89e', accent: '#d97706', accent2: '#fbbf24', ok: '#22c55e', warn: '#f59e0b', bad: '#ef4444', line: '#7a5844'
+      },
+      cool: {
+        bg: '#0a1220', bg2: '#101e32', midnight: '#0e1728', navy: '#1a2941', panel: '#1d2f47', panelSoft: '#12233d', paper: '#eef6ff', steel: '#9bb5d1', accent: '#4f46e5', accent2: '#6ee7f9', ok: '#22c55e', warn: '#fbbf24', bad: '#ef4444', line: '#2d446d'
+      },
+      neon: {
+        bg: '#05070d', bg2: '#0b0d17', midnight: '#090d19', navy: '#12182d', panel: '#191f34', panelSoft: '#0e1526', paper: '#edfcff', steel: '#8bdaf5', accent: '#00d9ff', accent2: '#ff43d8', ok: '#3af7a5', warn: '#ffd166', bad: '#ff5d73', line: '#293d60'
+      },
+      monochrome: {
+        bg: '#111111', bg2: '#1a1a1a', midnight: '#0f0f0f', navy: '#1f1f1f', panel: '#2b2b2b', panelSoft: '#1d1d1d', paper: '#f5f5f5', steel: '#b3b3b3', accent: '#ffffff', accent2: '#d4d4d4', ok: '#6ee7b7', warn: '#fbbf24', bad: '#f87171', line: '#404040'
+      },
+      aurora: {
+        bg: '#071714', bg2: '#0d211d', midnight: '#071d1a', navy: '#12352f', panel: '#1a453e', panelSoft: '#0e2b27', paper: '#ecffff', steel: '#9fe7d8', accent: '#34d399', accent2: '#7dd3fc', ok: '#4ade80', warn: '#fbbf24', bad: '#f87171', line: '#2f5b58'
+      },
+      twilight: {
+        bg: '#110d1d', bg2: '#1a1431', midnight: '#120f1d', navy: '#261d3d', panel: '#312548', panelSoft: '#1f1a2f', paper: '#f3ecff', steel: '#c9b8e5', accent: '#a78bfa', accent2: '#f472b6', ok: '#34d399', warn: '#fbbf24', bad: '#fb7185', line: '#4d3a68'
+      }
+    };
+
+    function applyTheme(key){
+      const t = themeMap[key] || themeMap.default;
+      const root = document.documentElement;
+      Object.entries(t).forEach(([k,v]) => {
+        const cssKey = '--' + k.replace(/[A-Z]/g, m => '-' + m.toLowerCase()).replace('bg-2','bg-2').replace('accent-2','accent-2').replace('panel-soft','panel-soft');
+        const normalized = cssKey === '--bg-2' ? '--bg-2' : cssKey;
+        root.style.setProperty(normalized, v);
+      });
+      root.style.setProperty('--bg', t.bg);
+      root.style.setProperty('--bg-2', t.bg2);
+      root.style.setProperty('--midnight', t.midnight);
+      root.style.setProperty('--navy', t.navy);
+      root.style.setProperty('--panel', t.panel);
+      root.style.setProperty('--panel-soft', t.panelSoft);
+      root.style.setProperty('--paper', t.paper);
+      root.style.setProperty('--steel', t.steel);
+      root.style.setProperty('--accent', t.accent);
+      root.style.setProperty('--accent-2', t.accent2);
+      root.style.setProperty('--ok', t.ok);
+      root.style.setProperty('--warn', t.warn);
+      root.style.setProperty('--bad', t.bad);
+      root.style.setProperty('--line', t.line);
+      root.style.setProperty('--shadow', 'rgba(0,0,0,0.3)');
+      document.body.style.background = 'radial-gradient(circle at top, rgba(255,255,255,0.04), transparent 20%), linear-gradient(180deg, ' + t.bg + ' 0%, ' + t.bg2 + ' 100%)';
+    }
+
+    function applyFont(name){
+      const fonts = {
+        Inter: '"Inter", "Segoe UI", sans-serif',
+        Roboto: '"Roboto", "Segoe UI", sans-serif',
+        Poppins: '"Poppins", "Segoe UI", sans-serif',
+        Rubik: '"Rubik", "Segoe UI", sans-serif',
+        Tahoma: 'Tahoma, sans-serif',
+        Georgia: 'Georgia, serif',
+        Verdana: 'Verdana, sans-serif',
+        'Playfair Display': '"Playfair Display", Georgia, serif',
+        'JetBrains Mono': '"JetBrains Mono", Consolas, monospace',
+        'Courier Prime': '"Courier Prime", monospace'
+      };
+      const family = fonts[name] || fonts.Inter;
+      document.documentElement.style.setProperty('--font-body', family);
+      document.documentElement.style.setProperty('--font-heading', family);
+      if (name === 'JetBrains Mono' || name === 'Courier Prime') {
+        document.documentElement.style.setProperty('--font-mono', family);
+      } else {
+        document.documentElement.style.setProperty('--font-mono', '"JetBrains Mono", Consolas, monospace');
+      }
+    }
+
+    document.getElementById('themeSelect').addEventListener('change', (e) => {
+      applyTheme(e.target.value);
+      localStorage.setItem('quasar-theme', e.target.value);
+    });
+
+    document.getElementById('fontSelect').addEventListener('change', (e) => {
+      applyFont(e.target.value);
+      localStorage.setItem('quasar-font', e.target.value);
+    });
+
+    const savedTheme = localStorage.getItem('quasar-theme') || 'default';
+    const savedFont = localStorage.getItem('quasar-font') || 'Inter';
+    document.getElementById('themeSelect').value = savedTheme;
+    document.getElementById('fontSelect').value = savedFont;
+    applyTheme(savedTheme);
+    applyFont(savedFont);
+
     document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
       document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
       document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===t.dataset.v));
     });
     const $=s=>document.querySelector(s);
 
-    /* ---------- APP SCREENS ---------- */
     const state={provider:'google_drive',plan:null,progress:0,timer:null};
     const plans=[
       {id:'airalo-3gb-15d',dest:'Japan',name:'Japan 3GB',gb:3,days:15,cents:1250,prov:'Airalo'},
@@ -201,7 +349,6 @@
     $('#next').onclick=()=>{idx=Math.min(S.length-1,idx+1);draw()};
     draw();
 
-    /* ---------- ADB GUIDE ---------- */
     function cmd(t){return `<pre><button class="copy" onclick="copyCmd(this)">Copy</button><code>${t}</code></pre>`}
     window.copyCmd=function(b){navigator.clipboard&&navigator.clipboard.writeText(b.nextElementSibling.textContent);b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1200)};
     window.osPick=function(btn,id){const p=btn.closest('.pane');p.querySelectorAll('.os button').forEach(x=>x.classList.toggle('on',x===btn));p.querySelectorAll('.ospane').forEach(x=>x.classList.toggle('on',x.id===id));}
