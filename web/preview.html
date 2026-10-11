@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Quasar Preview</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Roboto:wght@400;600;800&family=Poppins:wght@400;600;800&family=Playfair+Display:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<title>Quasar Premium Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Roboto:wght@400;500;700;900&family=Poppins:wght@400;500;600;700;800&family=Rubik:wght@400;500;600;700;800&family=Tahoma:wght@400;700&family=Georgia:wght@400;700&family=Verdana:wght@400;700&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--accent:#7c3aed;--accent2:#4f46e5}
+:root{--accent:#7c3aed;--accent2:#4f46e5;--shadow:rgba(15,23,42,.28)}
 [data-font="inter"]{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif}
 [data-font="roboto"]{font-family:Roboto,-apple-system,BlinkMacSystemFont,sans-serif}
 [data-font="poppins"]{font-family:Poppins,-apple-system,BlinkMacSystemFont,sans-serif}
-[data-font="tahoma"]{font-family:Tahoma,Trebuchet MS,sans-serif}
+[data-font="rubik"]{font-family:Rubik,-apple-system,BlinkMacSystemFont,sans-serif}
+[data-font="tahoma"]{font-family:Tahoma,Segoe UI,sans-serif}
 [data-font="georgia"]{font-family:Georgia,serif}
-[data-font="courier"]{font-family:'Courier New',monospace}
-[data-font="playfair"]{font-family:'Playfair Display',-apple-system,BlinkMacSystemFont,sans-serif}
+[data-font="verdana"]{font-family:Verdana,Segoe UI,sans-serif}
+[data-font="playfair"]{font-family:'Playfair Display',Georgia,serif}
 [data-font="jetbrains"]{font-family:'JetBrains Mono',monospace}
-[data-font="verdana"]{font-family:Verdana,Geneva,sans-serif}
-[data-font="comic"]{font-family:'Comic Sans MS',cursive,sans-serif}
+[data-font="courier"]{font-family:'Courier Prime',monospace}
 [data-theme=dark]{--bg:#0b0f1a;--panel:#131a2b;--text:#e6e9f2;--muted:#8b94ab;--line:#222c45}
 [data-theme=light]{--bg:#f4f6fb;--panel:#fff;--text:#161b2e;--muted:#667089;--line:#e1e5f0}
 [data-theme=midnight]{--bg:#050b1f;--panel:#0c1733;--text:#dbe7ff;--muted:#7f93c2;--line:#1a2a55}
@@ -29,6 +29,8 @@
 [data-theme=cyber]{--bg:#0d0f14;--panel:#1a1f2e;--text:#00ff88;--muted:#00cc6a;--line:#2d3847}
 [data-theme=rose]{--bg:#1a0f14;--panel:#2d1820;--text:#ffd9e8;--muted:#d494b0;--line:#4a2a36}
 [data-theme=slate]{--bg:#0f1217;--panel:#1a202c;--text:#d6dce4;--muted:#8b95a5;--line:#2d3748}
+[data-theme=luxury]{--bg:#120f1f;--panel:#1c1831;--text:#f6e8ff;--muted:#b39ecf;--line:#2b2642}
+[data-theme=glass]{--bg:#0d1325;--panel:rgba(17,25,40,.54);--text:#edf6ff;--muted:#93a8d2;--line:rgba(148,163,184,.35)}
 *{box-sizing:border-box;margin:0}
 body{background:var(--bg);color:var(--text);transition:.25s}
 .grad{background:linear-gradient(135deg,var(--accent2),var(--accent))}
@@ -37,27 +39,27 @@ nav .logo{font-weight:800;font-size:1.2rem;margin-right:auto}
 .tab,.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:600}
 .tab.active,.btn.primary{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;border-color:transparent}
 .menu{position:relative}
-.drop{display:none;position:absolute;right:0;top:44px;width:280px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 20px 50px #0006;z-index:10}
+.drop{display:none;position:absolute;right:0;top:44px;width:300px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 20px 50px #0006;z-index:10}
 .drop.open{display:block}
 .drop h4{font-size:.8rem;color:var(--muted);margin:8px 0 8px;font-weight:700}
 .swatch{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer;transition:.15s}
 .swatch:hover{background:var(--line)}
 .dot{width:16px;height:16px;border-radius:50%;border:1px solid var(--line)}
-.view{display:none;max-width:1100px;margin:0 auto;padding:32px 20px}
+.view{display:none;max-width:1200px;margin:0 auto;padding:32px 20px}
 .view.active{display:block}
 .hero{text-align:center;padding:60px 0 40px}
 .hero h1{font-size:clamp(2rem,5vw,3.4rem);margin-bottom:14px}
 .hero p{color:var(--muted);max-width:560px;margin:0 auto 24px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin:24px 0}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}
-.card.feat{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin:24px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 10px 30px var(--shadow)}
+.card.feat{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 20px 40px rgba(124,58,237,.25)}
 .price{font-size:2.2rem;font-weight:800;margin:8px 0}
 .card li{list-style:none;padding:8px 0;border-bottom:1px solid var(--line);color:var(--muted)}
 .card li:before{content:"✓ ";color:var(--accent)}
 h2{margin:36px 0 12px}
 .auth{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
 input{width:100%;padding:11px;margin:6px 0 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
-.dash{display:grid;grid-template-columns:200px 1fr;gap:18px}
+.dash{display:grid;grid-template-columns:220px 1fr;gap:18px}
 .side .item{padding:11px 12px;border-radius:10px;color:var(--muted);cursor:pointer;transition:.15s}
 .side .item.on,.side .item:hover{background:var(--panel);color:var(--text)}
 .bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:8px}
@@ -73,7 +75,17 @@ input{width:100%;padding:11px;margin:6px 0 10px;border-radius:10px;border:1px so
 .ph-nav{display:flex;justify-content:space-around;padding:12px;border-top:1px solid var(--line);background:var(--panel);font-size:.75rem;color:var(--muted)}
 .ring{width:120px;height:120px;border-radius:50%;margin:10px auto;display:grid;place-items:center;font-weight:800;font-size:1.4rem;background:conic-gradient(var(--accent) 0 68%,var(--line) 0)}
 .ring span{width:94px;height:94px;border-radius:50%;background:var(--bg);display:grid;place-items:center}
-@media(max-width:700px){.dash{grid-template-columns:1fr}}
+.luxury-shell{display:grid;grid-template-columns:260px 1fr;gap:18px}
+.luxury-side{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 18px 40px var(--shadow)}
+.luxury-main{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.chart{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:18px;min-height:220px;box-shadow:0 18px 40px var(--shadow)}
+.line{height:120px;border-radius:14px;background:linear-gradient(180deg,rgba(124,58,237,.25),rgba(124,58,237,.05));position:relative;overflow:hidden}
+.line:before{content:"";position:absolute;inset:12px 10px 8px 10px;border-radius:10px;border:2px solid rgba(124,58,237,.4);clip-path:polygon(0% 80%,16% 60%,28% 70%,50% 30%,72% 64%,100% 20%,100% 100%,0% 100%)}
+.activity{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 18px 40px var(--shadow)}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+.pill{padding:5px 10px;border-radius:999px;background:rgba(124,58,237,.12);color:var(--text);font-size:.8rem}
+@media(max-width:700px){.dash,.luxury-shell,.luxury-main{grid-template-columns:1fr}.hero h1{font-size:2.1rem}}
 </style>
 </head>
 <body>
@@ -81,42 +93,42 @@ input{width:100%;padding:11px;margin:6px 0 10px;border-radius:10px;border:1px so
   <div class="logo">🔒 Quasar</div>
   <button class="tab active" data-v="landing">Landing</button>
   <button class="tab" data-v="dash">Dashboard</button>
+  <button class="tab" data-v="lux">Luxury</button>
   <button class="tab" data-v="mobile">Mobile</button>
   <div class="menu">
-    <button class="btn" id="themeBtn">🎨 Theme & Font</button>
+    <button class="btn" id="themeBtn">🎨 Themes & Fonts</button>
     <div class="drop" id="drop">
-      <h4>PREMIUM THEMES</h4>
+      <h4>THEMES</h4>
       <div class="swatch" data-t="dark"><span class="dot" style="background:#0b0f1a"></span>Dark Premium</div>
       <div class="swatch" data-t="midnight"><span class="dot" style="background:#0c1733"></span>Midnight</div>
-      <div class="swatch" data-t="cyber"><span class="dot" style="background:#1a1f2e"></span>Cyber</div>
-      <div class="swatch" data-t="slate"><span class="dot" style="background:#1a202c"></span>Slate</div>
-      <h4>VIBRANT THEMES</h4>
       <div class="swatch" data-t="ocean"><span class="dot" style="background:#0f2847"></span>Ocean</div>
       <div class="swatch" data-t="forest"><span class="dot" style="background:#152620"></span>Forest</div>
       <div class="swatch" data-t="aurora"><span class="dot" style="background:#2d1a3a"></span>Aurora</div>
       <div class="swatch" data-t="rose"><span class="dot" style="background:#2d1820"></span>Rose</div>
-      <h4>SPECIALTY THEMES</h4>
       <div class="swatch" data-t="desert"><span class="dot" style="background:#362414"></span>Desert</div>
+      <div class="swatch" data-t="cyber"><span class="dot" style="background:#1a1f2e"></span>Cyber</div>
+      <div class="swatch" data-t="slate"><span class="dot" style="background:#1a202c"></span>Slate</div>
       <div class="swatch" data-t="light"><span class="dot" style="background:#f4f6fb"></span>Light</div>
-      <h4 style="margin-top:14px">FONT FAMILY</h4>
+      <div class="swatch" data-t="luxury"><span class="dot" style="background:#1c1831"></span>Luxury</div>
+      <div class="swatch" data-t="glass"><span class="dot" style="background:#14253d"></span>Glassmorphism</div>
+      <h4>FONTS</h4>
       <div class="swatch" data-f="inter">🔤 Inter</div>
       <div class="swatch" data-f="roboto">🔤 Roboto</div>
       <div class="swatch" data-f="poppins">🔤 Poppins</div>
+      <div class="swatch" data-f="rubik">🔤 Rubik</div>
       <div class="swatch" data-f="tahoma">🔤 Tahoma</div>
       <div class="swatch" data-f="georgia">🔤 Georgia</div>
       <div class="swatch" data-f="verdana">🔤 Verdana</div>
       <div class="swatch" data-f="playfair">🔤 Playfair Display</div>
       <div class="swatch" data-f="jetbrains">🔤 JetBrains Mono</div>
-      <div class="swatch" data-f="courier">🔤 Courier</div>
-      <div class="swatch" data-f="comic">🔤 Comic Sans</div>
-      <h4 style="margin-top:14px">CUSTOM ACCENT</h4>
+      <div class="swatch" data-f="courier">🔤 Courier Prime</div>
+      <h4>ACCENT</h4>
       <input type="color" id="accent" value="#7c3aed" style="height:38px;padding:2px" />
       <button class="btn" id="reset" style="width:100%;margin-top:6px">Reset All</button>
     </div>
   </div>
 </nav>
 
-<!-- LANDING -->
 <section class="view active" id="landing">
   <div class="hero">
     <h1>Private Android backups,<br/>encrypted before they leave your phone.</h1>
@@ -141,7 +153,6 @@ input{width:100%;padding:11px;margin:6px 0 10px;border-radius:10px;border:1px so
   </div>
 </section>
 
-<!-- DASHBOARD -->
 <section class="view" id="dash">
   <div class="dash">
     <div class="side card">
@@ -162,7 +173,37 @@ input{width:100%;padding:11px;margin:6px 0 10px;border-radius:10px;border:1px so
   </div>
 </section>
 
-<!-- MOBILE -->
+<section class="view" id="lux">
+  <div class="luxury-shell">
+    <aside class="luxury-side">
+      <div class="logo" style="margin-bottom:16px">🔒 Quasar</div>
+      <div class="item on" style="padding:10px 12px;border-radius:12px;background:var(--panel);margin-bottom:10px">Overview</div>
+      <div class="item" style="padding:10px 12px;border-radius:12px;margin-bottom:10px">Backups</div>
+      <div class="item" style="padding:10px 12px;border-radius:12px;margin-bottom:10px">Clouds</div>
+      <div class="item" style="padding:10px 12px;border-radius:12px;margin-bottom:10px">Downloads</div>
+      <div class="item" style="padding:10px 12px;border-radius:12px;margin-bottom:10px">Billing</div>
+    </aside>
+    <div>
+      <div class="luxury-main">
+        <div class="chart">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>Storage Health</b><span class="pill">68% used</span></div>
+          <div class="line"></div>
+        </div>
+        <div class="chart">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>Backup Activity</b><span class="pill">This month</span></div>
+          <div class="line" style="background:linear-gradient(180deg,rgba(76,201,240,.25),rgba(76,201,240,.05));"></div>
+        </div>
+      </div>
+      <div class="activity">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><b>Recent activity</b><span class="pill">Live</span></div>
+        <div class="row"><span>Google Drive backup completed</span><span>2h ago</span></div>
+        <div class="row"><span>Archive downloaded as ZIP</span><span>5h ago</span></div>
+        <div class="row"><span>Pro plan upgraded</span><span>Yesterday</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="view" id="mobile">
   <div class="phones">
     <div class="phone"><div class="ph-top grad" style="color:#fff"><b>Welcome back</b><div style="opacity:.8;font-size:.85rem">Your phone is protected</div></div>
