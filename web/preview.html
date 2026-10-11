@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quasar Preview</title>
+<style>
+:root{--accent:#7c3aed;--accent2:#4f46e5}
+[data-theme=dark]{--bg:#0b0f1a;--panel:#131a2b;--text:#e6e9f2;--muted:#8b94ab;--line:#222c45}
+[data-theme=light]{--bg:#f4f6fb;--panel:#fff;--text:#161b2e;--muted:#667089;--line:#e1e5f0}
+[data-theme=midnight]{--bg:#050b1f;--panel:#0c1733;--text:#dbe7ff;--muted:#7f93c2;--line:#1a2a55}
+[data-theme=emerald]{--bg:#06140f;--panel:#0d2219;--text:#dff7ec;--muted:#7fb59c;--line:#17382a}
+[data-theme=sunset]{--bg:#1a0d12;--panel:#2a141c;--text:#ffe9e1;--muted:#c79a8c;--line:#4a2430}
+[data-theme=ocean]{--bg:#0a1628;--panel:#0f2847;--text:#d4e5ff;--muted:#7fa3d1;--line:#1a3d5c}
+[data-theme=forest]{--bg:#0d1810;--panel:#152620;--text:#d9f0e8;--muted:#6fa083;--line:#1f3d2f}
+[data-theme=aurora]{--bg:#1a0a1f;--panel:#2d1a3a;--text:#f0d5ff;--muted:#b594d6;--line:#3d2b4d}
+[data-theme=desert]{--bg:#1f1409;--panel:#362414;--text:#f4dcc3;--muted:#c4a066;--line:#4d3a24}
+[data-theme=cyber]{--bg:#0d0f14;--panel:#1a1f2e;--text:#00ff88;--muted:#00cc6a;--line:#2d3847}
+[data-theme=rose]{--bg:#1a0f14;--panel:#2d1820;--text:#ffd9e8;--muted:#d494b0;--line:#4a2a36}
+[data-theme=slate]{--bg:#0f1217;--panel:#1a202c;--text:#d6dce4;--muted:#8b95a5;--line:#2d3748}
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text);transition:.25s}
+.grad{background:linear-gradient(135deg,var(--accent2),var(--accent))}
+nav{display:flex;gap:8px;align-items:center;padding:14px 24px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5;flex-wrap:wrap}
+nav .logo{font-weight:800;font-size:1.2rem;margin-right:auto}
+.tab,.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+.tab.active,.btn.primary{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;border-color:transparent}
+.menu{position:relative}
+.drop{display:none;position:absolute;right:0;top:44px;width:280px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 20px 50px #0006;z-index:10}
+.drop.open{display:block}
+.drop h4{font-size:.8rem;color:var(--muted);margin:8px 0 8px;font-weight:700}
+.swatch{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer;transition:.15s}
+.swatch:hover{background:var(--line)}
+.dot{width:16px;height:16px;border-radius:50%;border:1px solid var(--line)}
+.view{display:none;max-width:1100px;margin:0 auto;padding:32px 20px}
+.view.active{display:block}
+.hero{text-align:center;padding:60px 0 40px}
+.hero h1{font-size:clamp(2rem,5vw,3.4rem);margin-bottom:14px}
+.hero p{color:var(--muted);max-width:560px;margin:0 auto 24px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin:24px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}
+.card.feat{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.price{font-size:2.2rem;font-weight:800;margin:8px 0}
+.card li{list-style:none;padding:8px 0;border-bottom:1px solid var(--line);color:var(--muted)}
+.card li:before{content:"✓ ";color:var(--accent)}
+h2{margin:36px 0 12px}
+.auth{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+input{width:100%;padding:11px;margin:6px 0 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
+.dash{display:grid;grid-template-columns:200px 1fr;gap:18px}
+.side .item{padding:11px 12px;border-radius:10px;color:var(--muted);cursor:pointer;transition:.15s}
+.side .item.on,.side .item:hover{background:var(--panel);color:var(--text)}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;width:60%}
+.fmts{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.fmt{padding:8px 14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;transition:.15s}
+.fmt:hover{border-color:var(--accent);background:var(--bg)}
+.phones{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;padding:20px 0}
+.phone{width:290px;height:580px;border-radius:38px;border:8px solid #000;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 60px #0006}
+.ph-top{padding:22px 16px 14px}
+.ph-body{padding:0 14px;flex:1;overflow:hidden}
+.ph-row{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;font-size:.9rem}
+.ph-nav{display:flex;justify-content:space-around;padding:12px;border-top:1px solid var(--line);background:var(--panel);font-size:.75rem;color:var(--muted)}
+.ring{width:120px;height:120px;border-radius:50%;margin:10px auto;display:grid;place-items:center;font-weight:800;font-size:1.4rem;background:conic-gradient(var(--accent) 0 68%,var(--line) 0)}
+.ring span{width:94px;height:94px;border-radius:50%;background:var(--bg);display:grid;place-items:center}
+@media(max-width:700px){.dash{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">🔒 Quasar</div>
+  <button class="tab active" data-v="landing">Landing</button>
+  <button class="tab" data-v="dash">Dashboard</button>
+  <button class="tab" data-v="mobile">Mobile</button>
+  <div class="menu">
+    <button class="btn" id="themeBtn">🎨 Theme</button>
+    <div class="drop" id="drop">
+      <h4>PREMIUM THEMES</h4>
+      <div class="swatch" data-t="dark"><span class="dot" style="background:#0b0f1a"></span>Dark Premium</div>
+      <div class="swatch" data-t="midnight"><span class="dot" style="background:#0c1733"></span>Midnight</div>
+      <div class="swatch" data-t="cyber"><span class="dot" style="background:#1a1f2e"></span>Cyber</div>
+      <div class="swatch" data-t="slate"><span class="dot" style="background:#1a202c"></span>Slate</div>
+      <h4>VIBRANT THEMES</h4>
+      <div class="swatch" data-t="ocean"><span class="dot" style="background:#0f2847"></span>Ocean</div>
+      <div class="swatch" data-t="forest"><span class="dot" style="background:#152620"></span>Forest</div>
+      <div class="swatch" data-t="aurora"><span class="dot" style="background:#2d1a3a"></span>Aurora</div>
+      <div class="swatch" data-t="rose"><span class="dot" style="background:#2d1820"></span>Rose</div>
+      <h4>SPECIALTY THEMES</h4>
+      <div class="swatch" data-t="desert"><span class="dot" style="background:#362414"></span>Desert</div>
+      <div class="swatch" data-t="light"><span class="dot" style="background:#f4f6fb"></span>Light</div>
+      <h4 style="margin-top:14px">CUSTOM ACCENT</h4>
+      <input type="color" id="accent" value="#7c3aed" style="height:38px;padding:2px" />
+      <button class="btn" id="reset" style="width:100%;margin-top:6px">Reset</button>
+    </div>
+  </div>
+</nav>
+
+<!-- LANDING -->
+<section class="view active" id="landing">
+  <div class="hero">
+    <h1>Private Android backups,<br/>encrypted before they leave your phone.</h1>
+    <p>Back up to any cloud provider and download your encrypted archive any time, in the format you choose.</p>
+    <button class="btn primary" onclick="go('landing');document.getElementById('signup').scrollIntoView({behavior:'smooth'})">Start free</button>
+  </div>
+  <div class="cards">
+    <div class="card"><h3>🔐 Encrypted first</h3><p style="color:var(--muted)">AES-256-GCM, optional dual-layer with XChaCha20.</p></div>
+    <div class="card"><h3>☁️ Any cloud</h3><p style="color:var(--muted)">Google Drive, OneDrive, Dropbox, S3 and more.</p></div>
+    <div class="card"><h3>📥 Always yours</h3><p style="color:var(--muted)">Download TAR.GZ, TAR.BZ2, TAR.XZ, ZIP or 7Z at any time.</p></div>
+  </div>
+  <h2>Pricing</h2>
+  <div class="cards">
+    <div class="card"><h3>Free</h3><div class="price">$0</div><ul><li>15 backups / month</li><li>All cloud providers</li><li>5 GB storage</li><li>Local encrypted download</li></ul></div>
+    <div class="card feat"><h3>Pro</h3><div class="price">$9.99<small style="font-size:1rem;color:var(--muted)">/mo</small></div><ul><li>100 backups / month</li><li>100 GB storage</li><li>Scheduling</li><li>Priority support</li></ul></div>
+    <div class="card"><h3>Business</h3><div class="price">$29.99<small style="font-size:1rem;color:var(--muted)">/mo</small></div><ul><li>500 backups / month</li><li>500 GB storage</li><li>Team sharing</li><li>Audit logs</li></ul></div>
+  </div>
+  <h2 id="signup">Get started</h2>
+  <div class="auth">
+    <div class="card"><h3>Create account</h3><input placeholder="Full name"/><input placeholder="Email"/><input type="password" placeholder="Password"/><button class="btn primary" style="width:100%">Sign up free</button></div>
+    <div class="card"><h3>Log in</h3><input placeholder="Email"/><input type="password" placeholder="Password"/><button class="btn primary" style="width:100%">Log in</button></div>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<section class="view" id="dash">
+  <div class="dash">
+    <div class="side card">
+      <div class="item on">📊 Overview</div><div class="item">🗂️ Backups</div><div class="item">☁️ Providers</div>
+      <div class="item">📥 Downloads</div><div class="item">💳 Billing</div><div class="item">⚙️ Settings</div>
+    </div>
+    <div>
+      <div class="cards" style="margin-top:0">
+        <div class="card"><small style="color:var(--muted)">Backups this month</small><div class="price">9 / 15</div><div class="bar"><i class="grad" style="width:60%"></i></div></div>
+        <div class="card"><small style="color:var(--muted)">Storage</small><div class="price">3.2 / 5 GB</div><div class="bar"><i class="grad" style="width:64%"></i></div></div>
+        <div class="card"><small style="color:var(--muted)">Plan</small><div class="price">Free</div><button class="btn primary">Upgrade</button></div>
+      </div>
+      <div class="card"><h3>Latest backup</h3><p style="color:var(--muted);margin:6px 0">Pixel 8 · Google Drive · Completed</p>
+        <b>Download encrypted archive</b>
+        <div class="fmts"><span class="fmt">TAR.GZ ⭐</span><span class="fmt">TAR.BZ2</span><span class="fmt">TAR.XZ</span><span class="fmt">ZIP</span><span class="fmt">7Z</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MOBILE -->
+<section class="view" id="mobile">
+  <div class="phones">
+    <div class="phone"><div class="ph-top grad" style="color:#fff"><b>Welcome back</b><div style="opacity:.8;font-size:.85rem">Your phone is protected</div></div>
+      <div class="ph-body"><div class="ring"><span>68%</span></div><div style="text-align:center;color:var(--muted);font-size:.85rem;margin-bottom:12px">Uploading to Google Drive</div>
+        <div class="ph-row">📱 Pixel 8 · 3.2 GB</div><div class="ph-row">🔐 AES-256-GCM</div></div>
+      <div class="ph-nav"><span>🏠<br/>Home</span><span>🗂️<br/>Backups</span><span>☁️<br/>Cloud</span><span>👤<br/>Profile</span></div></div>
+    <div class="phone"><div class="ph-top"><b style="font-size:1.1rem">Choose provider</b></div>
+      <div class="ph-body"><div class="ph-row">☁️ Google Drive</div><div class="ph-row">☁️ OneDrive</div><div class="ph-row">☁️ Dropbox</div><div class="ph-row">☁️ Amazon S3</div>
+        <button class="btn primary" style="width:100%;margin-top:6px">Continue</button></div>
+      <div class="ph-nav"><span>🏠<br/>Home</span><span>🗂️<br/>Backups</span><span>☁️<br/>Cloud</span><span>👤<br/>Profile</span></div></div>
+    <div class="phone"><div class="ph-top"><b style="font-size:1.1rem">Download archive</b></div>
+      <div class="ph-body"><div class="ph-row">TAR.GZ ⭐ · Fast</div><div class="ph-row">ZIP · Universal</div><div class="ph-row">TAR.XZ · Compact</div><div class="ph-row">7Z · Best ratio</div>
+        <button class="btn primary" style="width:100%;margin-top:6px">Download</button></div>
+      <div class="ph-nav"><span>🏠<br/>Home</span><span>🗂️<br/>Backups</span><span>☁️<br/>Cloud</span><span>👤<br/>Profile</span></div></div>
+  </div>
+</section>
+
+<script>
+const root=document.documentElement,$=s=>document.querySelector(s);
+function go(v){document.querySelectorAll('.view').forEach(e=>e.classList.toggle('active',e.id===v));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.dataset.v===v))}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>go(t.dataset.v));
+$('#themeBtn').onclick=()=>$('#drop').classList.toggle('open');
+document.addEventListener('click',e=>{if(!e.target.closest('.menu'))$('#drop').classList.remove('open')});
+function setTheme(t){root.dataset.theme=t;localStorage.qTheme=t}
+function setAccent(c){root.style.setProperty('--accent',c);root.style.setProperty('--accent2',c);localStorage.qAccent=c}
+document.querySelectorAll('.swatch').forEach(s=>s.onclick=()=>setTheme(s.dataset.t));
+$('#accent').oninput=e=>setAccent(e.target.value);
+$('#reset').onclick=()=>{localStorage.clear();root.dataset.theme='dark';root.style.removeProperty('--accent');root.style.removeProperty('--accent2');location.reload()};
+if(localStorage.qTheme)root.dataset.theme=localStorage.qTheme;
+if(localStorage.qAccent)setAccent(localStorage.qAccent);
+</script>
+</body>
+</html>
