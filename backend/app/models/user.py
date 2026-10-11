@@ -1,1 +1,46 @@
-from datetime import datetime\nfrom typing import Optional\n\nfrom pydantic import BaseModel, EmailStr, Field\n\n\nclass UserInDB(BaseModel):\n    \"\"\"MongoDB user document model.\"\"\"\n    id: Optional[str] = Field(None, alias=\"_id\")\n    email: EmailStr\n    hashed_password: str\n    full_name: Optional[str] = None\n    is_active: bool = True\n    created_at: datetime = Field(default_factory=datetime.utcnow)\n    updated_at: datetime = Field(default_factory=datetime.utcnow)\n\n\nclass UserCreateRequest(BaseModel):\n    email: EmailStr\n    password: str\n    full_name: Optional[str] = None\n\n\nclass UserLoginRequest(BaseModel):\n    email: EmailStr\n    password: str\n\n\nclass UserResponse(BaseModel):\n    \"\"\"Public user response model.\"\"\"\n    id: str\n    email: EmailStr\n    full_name: Optional[str] = None\n    created_at: datetime\n\n\nclass TokenResponse(BaseModel):\n    \"\"\"Authentication token response.\"\"\"\n    access_token: str\n    token_type: str = \"bearer\"\n    user: UserResponse\n"
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, EmailStr, Field
+
+
+class UserInDB(BaseModel):
+    """MongoDB user document model."""
+    id: str = Field(alias="_id")
+    email: EmailStr
+    full_name: Optional[str] = None
+    hashed_password: str
+    is_active: bool = True
+    subscription_plan_id: str = "free"  # Current plan: free, pro, business
+    subscription_status: str = "active"  # active, canceled, past_due, trial
+    subscription_id: Optional[str] = None  # Reference to SubscriptionStatus doc
+    stripe_customer_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        populate_by_name = True
+
+
+class UserCreateRequest(BaseModel):
+    """Request to create a new user account."""
+    email: EmailStr
+    password: str
+    full_name: Optional[str] = None
+
+
+class UserResponse(BaseModel):
+    """Public user profile response."""
+    id: str
+    email: str
+    full_name: Optional[str] = None
+    subscription_plan_id: str
+    subscription_status: str
+    created_at: datetime
+
+
+class TokenResponse(BaseModel):
+    """Response containing access token and user info."""
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
