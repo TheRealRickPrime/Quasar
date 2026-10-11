@@ -1,11 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" data-font="inter">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Quasar Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Roboto:wght@400;600;800&family=Poppins:wght@400;600;800&family=Playfair+Display:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{--accent:#7c3aed;--accent2:#4f46e5}
+[data-font="inter"]{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif}
+[data-font="roboto"]{font-family:Roboto,-apple-system,BlinkMacSystemFont,sans-serif}
+[data-font="poppins"]{font-family:Poppins,-apple-system,BlinkMacSystemFont,sans-serif}
+[data-font="tahoma"]{font-family:Tahoma,Trebuchet MS,sans-serif}
+[data-font="georgia"]{font-family:Georgia,serif}
+[data-font="courier"]{font-family:'Courier New',monospace}
+[data-font="playfair"]{font-family:'Playfair Display',-apple-system,BlinkMacSystemFont,sans-serif}
+[data-font="jetbrains"]{font-family:'JetBrains Mono',monospace}
+[data-font="verdana"]{font-family:Verdana,Geneva,sans-serif}
+[data-font="comic"]{font-family:'Comic Sans MS',cursive,sans-serif}
 [data-theme=dark]{--bg:#0b0f1a;--panel:#131a2b;--text:#e6e9f2;--muted:#8b94ab;--line:#222c45}
 [data-theme=light]{--bg:#f4f6fb;--panel:#fff;--text:#161b2e;--muted:#667089;--line:#e1e5f0}
 [data-theme=midnight]{--bg:#050b1f;--panel:#0c1733;--text:#dbe7ff;--muted:#7f93c2;--line:#1a2a55}
@@ -19,7 +30,7 @@
 [data-theme=rose]{--bg:#1a0f14;--panel:#2d1820;--text:#ffd9e8;--muted:#d494b0;--line:#4a2a36}
 [data-theme=slate]{--bg:#0f1217;--panel:#1a202c;--text:#d6dce4;--muted:#8b95a5;--line:#2d3748}
 *{box-sizing:border-box;margin:0}
-body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text);transition:.25s}
+body{background:var(--bg);color:var(--text);transition:.25s}
 .grad{background:linear-gradient(135deg,var(--accent2),var(--accent))}
 nav{display:flex;gap:8px;align-items:center;padding:14px 24px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5;flex-wrap:wrap}
 nav .logo{font-weight:800;font-size:1.2rem;margin-right:auto}
@@ -72,7 +83,7 @@ input{width:100%;padding:11px;margin:6px 0 10px;border-radius:10px;border:1px so
   <button class="tab" data-v="dash">Dashboard</button>
   <button class="tab" data-v="mobile">Mobile</button>
   <div class="menu">
-    <button class="btn" id="themeBtn">🎨 Theme</button>
+    <button class="btn" id="themeBtn">🎨 Theme & Font</button>
     <div class="drop" id="drop">
       <h4>PREMIUM THEMES</h4>
       <div class="swatch" data-t="dark"><span class="dot" style="background:#0b0f1a"></span>Dark Premium</div>
@@ -87,9 +98,20 @@ input{width:100%;padding:11px;margin:6px 0 10px;border-radius:10px;border:1px so
       <h4>SPECIALTY THEMES</h4>
       <div class="swatch" data-t="desert"><span class="dot" style="background:#362414"></span>Desert</div>
       <div class="swatch" data-t="light"><span class="dot" style="background:#f4f6fb"></span>Light</div>
+      <h4 style="margin-top:14px">FONT FAMILY</h4>
+      <div class="swatch" data-f="inter">🔤 Inter</div>
+      <div class="swatch" data-f="roboto">🔤 Roboto</div>
+      <div class="swatch" data-f="poppins">🔤 Poppins</div>
+      <div class="swatch" data-f="tahoma">🔤 Tahoma</div>
+      <div class="swatch" data-f="georgia">🔤 Georgia</div>
+      <div class="swatch" data-f="verdana">🔤 Verdana</div>
+      <div class="swatch" data-f="playfair">🔤 Playfair Display</div>
+      <div class="swatch" data-f="jetbrains">🔤 JetBrains Mono</div>
+      <div class="swatch" data-f="courier">🔤 Courier</div>
+      <div class="swatch" data-f="comic">🔤 Comic Sans</div>
       <h4 style="margin-top:14px">CUSTOM ACCENT</h4>
       <input type="color" id="accent" value="#7c3aed" style="height:38px;padding:2px" />
-      <button class="btn" id="reset" style="width:100%;margin-top:6px">Reset</button>
+      <button class="btn" id="reset" style="width:100%;margin-top:6px">Reset All</button>
     </div>
   </div>
 </nav>
@@ -166,11 +188,14 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>go(t.dataset.v));
 $('#themeBtn').onclick=()=>$('#drop').classList.toggle('open');
 document.addEventListener('click',e=>{if(!e.target.closest('.menu'))$('#drop').classList.remove('open')});
 function setTheme(t){root.dataset.theme=t;localStorage.qTheme=t}
+function setFont(f){root.dataset.font=f;localStorage.qFont=f}
 function setAccent(c){root.style.setProperty('--accent',c);root.style.setProperty('--accent2',c);localStorage.qAccent=c}
-document.querySelectorAll('.swatch').forEach(s=>s.onclick=()=>setTheme(s.dataset.t));
+document.querySelectorAll('.swatch[data-t]').forEach(s=>s.onclick=()=>setTheme(s.dataset.t));
+document.querySelectorAll('.swatch[data-f]').forEach(s=>s.onclick=()=>setFont(s.dataset.f));
 $('#accent').oninput=e=>setAccent(e.target.value);
-$('#reset').onclick=()=>{localStorage.clear();root.dataset.theme='dark';root.style.removeProperty('--accent');root.style.removeProperty('--accent2');location.reload()};
+$('#reset').onclick=()=>{localStorage.clear();root.dataset.theme='dark';root.dataset.font='inter';root.style.removeProperty('--accent');root.style.removeProperty('--accent2');location.reload()};
 if(localStorage.qTheme)root.dataset.theme=localStorage.qTheme;
+if(localStorage.qFont)root.dataset.font=localStorage.qFont;
 if(localStorage.qAccent)setAccent(localStorage.qAccent);
 </script>
 </body>
