@@ -45,7 +45,7 @@ class Tier:
 
 
 TIERS = {
-    "free": Tier("free", "Free", 0, 15, 2, "15 backups and 2 GB of cloud upload per month."),
+    "free": Tier("free", "Free", 0, 6, 2, "6 backups and 2 GB of cloud upload per month."),
     "supporter": Tier("supporter", "Supporter", 10, None, 50,
                       "Unlimited backups, 50 GB of cloud upload per month."),
     "pro": Tier("pro", "Pro", 25, None, None, "Unlimited backups and cloud upload. One-time payment."),

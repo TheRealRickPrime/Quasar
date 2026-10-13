@@ -13,15 +13,15 @@ from test_ui_flow import wait_until, window  # noqa: E402,F401
 def test_free_limit_blocks_backup_start(window):
     app, win, tmp = window
     win.ctx.devices = [Device("S1", "device", model="Pixel_7")]
-    for _ in range(15):
+    for _ in range(6):
         win.ctx.licensing.record_backup()
     wizard = win.pages.widget(1)
     wizard._start_backup()
-    assert "15 backups" in wizard.bk_status.text()
+    assert "6 backups" in wizard.bk_status.text()
     assert not getattr(wizard, "_backup_running", False)
     page = win.pages.widget(7)
     page.refresh()
-    assert "Free" in page.plan_label.text() and "15 of 15" in page.backup_text.text()
+    assert "Free" in page.plan_label.text() and "6 of 6" in page.backup_text.text()
 
 
 def test_image_page_create_and_restore(window):

@@ -41,7 +41,7 @@ py -m pytest -q
 
 | Plan | Price | Backups / month | Cloud upload / month |
 |---|---|---|---|
-| Free | $0 | 15 | 2 GB |
+| Free | $0 | 6 | 2 GB |
 | Supporter | $10 | unlimited | 50 GB |
 | Pro | $25 (one-time) | unlimited | unlimited |
 

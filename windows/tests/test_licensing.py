@@ -58,10 +58,10 @@ def test_free_limits_and_upgrade(tmp_path, keys):
     priv, pub = keys
     lc = lic.Licensing(tmp_path, pub)
     assert lc.tier.key == "free"
-    for _ in range(15):
+    for _ in range(6):
         assert lc.check_backup() == ""
         lc.record_backup()
-    assert "15 backups" in lc.check_backup()
+    assert "6 backups" in lc.check_backup()
 
     assert lc.check_upload(1 * lic.GB) == ""
     lc.record_upload(int(1.5 * lic.GB))

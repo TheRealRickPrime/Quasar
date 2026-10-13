@@ -21,7 +21,7 @@ OUT = ROOT / "releases"
 README = """Quasar for Windows {version}
 
 Run Quasar.exe (no installer needed). Keep the whole folder together.
-Free plan: 15 backups and 2 GB of cloud upload per month.
+Free plan: 6 backups and 2 GB of cloud upload per month.
 Bought Supporter or Pro? Open the License page, paste the key from your Gumroad receipt and click Activate.
 """
 
