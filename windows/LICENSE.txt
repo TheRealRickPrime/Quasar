@@ -1,7 +1,7 @@
 Quasar for Windows - End User License Agreement
 
-Copyright (c) 2026 TheRealRickPrime. All rights reserved.
-Contact: TheRealRickPrime@outlook.com
+Copyright (c) 2026 Quasar Labs. All rights reserved.
+Contact: quasarlabs-inc@outlook.com
 
 The software in this folder ("windows/") is proprietary and source-available. It is NOT covered by
 the MIT license that applies to the rest of this repository.

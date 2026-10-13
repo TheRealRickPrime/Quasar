@@ -45,12 +45,11 @@ py -m pytest -q
 | Supporter | $10 | unlimited | 50 GB |
 | Pro | $25 (one-time) | unlimited | unlimited |
 
-Backups count guided backups and full phone images; the Compression Lab and speed tests are never limited. Limits live in `quasar_win/licensing.py` (`TIERS`, `PAYPAL_USER`, `SUPPORT_EMAIL`).
+Backups count guided backups and full phone images; the Compression Lab and speed tests are never limited. Limits live in `quasar_win/licensing.py` (`TIERS`, `GUMROAD_PRODUCTS`, `SUPPORT_EMAIL`).
 
-Keys are offline Ed25519-signed strings, verified with the public key embedded in the app. To sell one: take payment (PayPal link on the License page, or GitHub Sponsors), then run
-`python tools/make_license.py --tier pro --email buyer@example.com` and send the key. The **private key** (`D:\Quasar-licensing\private.key`) must never be committed; back it up, since losing it means you can't issue keys that existing builds accept. Limits are client-side and the code is MIT-licensed, so they're an honest-user system, not DRM.
+Licenses are sold on Gumroad. Buyers paste the per-sale key from their receipt into the License page; the app verifies it with Gumroad's license API (re-checked every few days, 30-day offline grace; refunded purchases stop working). Owner keys (`QSR1.…`, Ed25519-signed, via `tools/make_license.py`) still work offline. The **private key** (`D:\Quasar-licensing\private.key`) must never be committed. Limits are client-side, so they're an honest-user system, not DRM.
 
-`python tools/release.py` (after `build.ps1`) writes `releases\Quasar-Windows-{Free,Supporter,Pro}-<version>.zip`. The Supporter/Pro zips embed a license for the owner's email: keep them private.
+`python tools/release.py` (after `build.ps1`) writes `releases\Quasar-Windows-<version>.zip` (no key; upload to Gumroad) and `Quasar-Windows-OWNER-<version>.zip` (Pro key embedded: keep private).
 
 ## Limits to know about
 

@@ -20,13 +20,12 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from .config import app_dir
 
 PUBLIC_KEY_B64 = "fPr//U9S+wzVBpzgWc+fJe6HVcHnQuYHxAqe3svBo/s="
-PAYPAL_USER = "lircin"
-SPONSORS_URL = "https://github.com/sponsors/TheRealRickPrime"
-SUPPORT_EMAIL = "TheRealRickPrime@outlook.com"  # where buyers send their receipt to get a key
-# Optional extras: leave blank to hide. WHATSAPP_NUMBER is digits only with country code, e.g. 15551234567.
-KOFI_URL = ""
-BUYMEACOFFEE_URL = ""
-WHATSAPP_NUMBER = ""
+SUPPORT_EMAIL = "quasarlabs-inc@outlook.com"
+GUMROAD_VERIFY_URL = "https://api.gumroad.com/v2/licenses/verify"
+GUMROAD_PRODUCTS = {"qygwf": "supporter", "qwjtj": "pro"}  # Gumroad permalink -> tier
+BUY_URLS = {"supporter": "https://quasarlabs3.gumroad.com/l/qygwf",
+            "pro": "https://quasarlabs3.gumroad.com/l/qwjtj"}
+RECHECK_DAYS, OFFLINE_GRACE_DAYS = 3, 30
 GB = 1024 ** 3
 
 
@@ -40,8 +39,8 @@ class Tier:
     blurb: str
 
     @property
-    def paypal_url(self) -> str:
-        return f"https://www.paypal.com/paypalme/{PAYPAL_USER}/{self.price}USD"
+    def buy_url(self) -> str:
+        return BUY_URLS.get(self.key, "")
 
 
 TIERS = {
@@ -88,6 +87,34 @@ def verify_key(key: str, public_key_b64: str = PUBLIC_KEY_B64) -> License:
     return lic
 
 
+def verify_gumroad(key: str, count_use: bool = False, timeout: float = 10) -> License:
+    """Check a Gumroad-issued key against every Quasar product. Needs internet."""
+    import requests
+
+    key = key.strip()
+    network_error = False
+    for permalink, tier in GUMROAD_PRODUCTS.items():
+        try:
+            r = requests.post(GUMROAD_VERIFY_URL, timeout=timeout, data={
+                "product_permalink": permalink, "license_key": key,
+                "increment_uses_count": "true" if count_use else "false"})
+            data = r.json()
+        except (requests.RequestException, ValueError):
+            network_error = True
+            continue
+        if not data.get("success"):
+            continue
+        purchase = data.get("purchase", {})
+        if purchase.get("refunded") or purchase.get("chargebacked") or purchase.get("disputed"):
+            raise LicenseError("This purchase was refunded or disputed, so the key is no longer valid.")
+        if purchase.get("subscription_cancelled_at") or purchase.get("subscription_failed_at"):
+            raise LicenseError("This subscription is no longer active.")
+        return License(tier, purchase.get("email", ""), purchase.get("id", "")[:8],
+                       time.strftime("%Y-%m-%d"))
+    raise LicenseError("Couldn't reach the license server. Check your internet connection and try again."
+                       if network_error else "That license key wasn't found. Check it and try again.")
+
+
 def _exe_dir() -> Path:
     return Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
 
@@ -108,19 +135,49 @@ class Licensing:
         for path in (self.dir / "license.key", _exe_dir() / "license.key"):
             if path.is_file():
                 try:
-                    self.license = verify_key(path.read_text(encoding="utf-8"), self.public_key)
+                    text = path.read_text(encoding="utf-8").strip()
+                    self.license = (verify_key(text, self.public_key) if text.startswith("QSR1.")
+                                    else self._cached_gumroad(text))
                     return
                 except (LicenseError, OSError) as exc:
                     self.problem = str(exc)
 
+    def _cached_gumroad(self, key: str) -> License:
+        """Use the last successful check; re-verify online every few days, tolerate being offline."""
+        cache_path = self.dir / "gumroad.json"
+        try:
+            cache = json.loads(cache_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            cache = {}
+        if cache.get("key") != key:
+            cache = {}
+        age = (time.time() - cache.get("checked", 0)) / 86400 if cache else 1e9
+        if age >= RECHECK_DAYS:
+            try:
+                lic = verify_gumroad(key, timeout=4)
+            except LicenseError as exc:
+                if age >= OFFLINE_GRACE_DAYS or "Couldn't reach" not in str(exc):
+                    raise
+            else:
+                cache = {"key": key, "checked": time.time(), "license": lic.__dict__}
+                cache_path.write_text(json.dumps(cache), encoding="utf-8")
+        return License(**cache["license"])
+
     def activate(self, key: str) -> License:
-        lic = verify_key(key, self.public_key)
-        (self.dir / "license.key").write_text(key.strip(), encoding="utf-8")
+        key = key.strip()
+        if key.startswith("QSR1."):
+            lic = verify_key(key, self.public_key)
+        else:
+            lic = verify_gumroad(key, count_use=True)
+            (self.dir / "gumroad.json").write_text(json.dumps(
+                {"key": key, "checked": time.time(), "license": lic.__dict__}), encoding="utf-8")
+        (self.dir / "license.key").write_text(key, encoding="utf-8")
         self.reload()
         return lic
 
     def deactivate(self) -> None:
         (self.dir / "license.key").unlink(missing_ok=True)
+        (self.dir / "gumroad.json").unlink(missing_ok=True)
         self.reload()
 
     @property

@@ -57,36 +57,22 @@ class LicensePage(QWidget):
             bl.addWidget(label(tier.blurb))
             bl.addStretch()
             if tier.price:
-                pay = QPushButton(f"Pay ${tier.price} with PayPal")
+                pay = QPushButton(f"Buy {tier.name} - ${tier.price}")
                 pay.setObjectName("primary")
-                pay.clicked.connect(lambda _c=False, t=tier: QDesktopServices.openUrl(QUrl(t.paypal_url)))
+                pay.clicked.connect(lambda _c=False, t=tier: QDesktopServices.openUrl(QUrl(t.buy_url)))
                 bl.addWidget(pay)
             tiers.addWidget(box)
         root.addLayout(tiers)
 
         extra = QHBoxLayout()
-        sponsor = QPushButton("Sponsor on GitHub (free to set up, no fees)")
-        sponsor.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(lic.SPONSORS_URL)))
-        extra.addWidget(sponsor)
-        for text, url in (("Ko-fi", lic.KOFI_URL), ("Buy Me a Coffee", lic.BUYMEACOFFEE_URL)):
-            if url:
-                b = QPushButton(text)
-                b.clicked.connect(lambda _c=False, u=url: QDesktopServices.openUrl(QUrl(u)))
-                extra.addWidget(b)
-        mail = QPushButton("Email receipt")
+        mail = QPushButton("Contact support")
         mail.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(
-            f"mailto:{lic.SUPPORT_EMAIL}?subject=Quasar%20license%20request&body="
-            "Plan%3A%20%0AEmail%20for%20the%20key%3A%20%0APayment%20receipt%2Fid%3A%20")))
+            f"mailto:{lic.SUPPORT_EMAIL}?subject=Quasar%20support")))
         extra.addWidget(mail)
-        if lic.WHATSAPP_NUMBER:
-            wa = QPushButton("WhatsApp")
-            wa.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(f"https://wa.me/{lic.WHATSAPP_NUMBER}")))
-            extra.addWidget(wa)
         extra.addStretch()
         root.addLayout(extra)
-        how = (f"After paying, email the receipt and the plan you bought to <b>{lic.SUPPORT_EMAIL}</b>"
-               "; you'll get a key to paste above. Keys work offline and are tied to no device.<br>"
-               f"{COPYRIGHT}")
+        how = ("After buying, Gumroad emails you a license key: paste it above and click Activate. "
+               f"Activation needs internet once; questions: <b>{lic.SUPPORT_EMAIL}</b><br>{COPYRIGHT}")
         root.addWidget(label(how, "muted"))
         root.addStretch()
         self.refresh()

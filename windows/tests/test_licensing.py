@@ -90,3 +90,45 @@ def test_license_next_to_exe_is_picked_up(tmp_path, keys, monkeypatch):
     (exe_dir / "license.key").write_text(make_license.make_key("pro", "z@z.z", private_key=priv))
     monkeypatch.setattr(lic, "_exe_dir", lambda: exe_dir)
     assert lic.Licensing(tmp_path / "data_missing_ok" if False else tmp_path, pub).tier.key == "pro"
+
+
+class _Resp:
+    def __init__(self, data):
+        self._d = data
+
+    def json(self):
+        return self._d
+
+
+def test_gumroad_activation_and_refund(tmp_path, monkeypatch):
+    import requests
+
+    def post(url, data=None, timeout=0):
+        if data["license_key"] == "GOOD" and data["product_permalink"] == "qwjtj":
+            return _Resp({"success": True, "purchase": {"email": "b@x.y", "id": "abcdefghij"}})
+        if data["license_key"] == "REFUND" and data["product_permalink"] == "qygwf":
+            return _Resp({"success": True, "purchase": {"refunded": True}})
+        return _Resp({"success": False})
+
+    monkeypatch.setattr(requests, "post", post)
+    lc = lic.Licensing(tmp_path)
+    assert lc.activate("GOOD").tier == "pro" and lc.tier.key == "pro"
+    assert lic.Licensing(tmp_path).tier.key == "pro"  # served from cache
+    with pytest.raises(lic.LicenseError, match="refunded"):
+        lc.activate("REFUND")
+    with pytest.raises(lic.LicenseError, match="wasn't found"):
+        lc.activate("NOPE")
+    lc.deactivate()
+    assert lc.tier.key == "free"
+
+
+def test_gumroad_offline_error(tmp_path, monkeypatch):
+    import requests
+
+    def post(*a, **k):
+        raise requests.ConnectionError()
+
+    monkeypatch.setattr(requests, "post", post)
+    with pytest.raises(lic.LicenseError, match="Couldn't reach"):
+        lic.Licensing(tmp_path).activate("ANY")
+
