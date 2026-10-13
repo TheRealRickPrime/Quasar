@@ -1,0 +1,8 @@
+build/
+dist/
+releases/
+license.key
+private.key
+*.spec
+__pycache__/
+.pytest_cache/
