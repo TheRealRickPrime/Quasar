@@ -42,7 +42,7 @@ py -m pytest -q
 | Plan | Price | Backups / month | Cloud upload / month |
 |---|---|---|---|
 | Free | $0 | 6 | 2 GB |
-| Supporter | $10 | unlimited | 50 GB |
+| Supporter | $10 | 15 | 30 GB |
 | Pro | $25 (one-time) | unlimited | unlimited |
 
 Backups count guided backups and full phone images; the Compression Lab and speed tests are never limited. Limits live in `quasar_win/licensing.py` (`TIERS`, `GUMROAD_PRODUCTS`, `SUPPORT_EMAIL`).

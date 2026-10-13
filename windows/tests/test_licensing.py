@@ -69,7 +69,7 @@ def test_free_limits_and_upgrade(tmp_path, keys):
 
     lc.activate(make_license.make_key("supporter", "a@b.c", private_key=priv))
     assert lc.tier.key == "supporter" and lc.check_backup() == ""
-    assert lc.check_upload(10 * lic.GB) == "" and "50 GB" in lc.check_upload(60 * lic.GB)
+    assert lc.check_upload(10 * lic.GB) == "" and "30 GB" in lc.check_upload(60 * lic.GB)
 
     lc.activate(make_license.make_key("pro", "a@b.c", private_key=priv))
     assert lc.check_upload(10_000 * lic.GB) == ""
