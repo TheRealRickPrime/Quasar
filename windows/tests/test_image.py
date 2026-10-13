@@ -147,6 +147,26 @@ def test_image_roundtrip_and_manifest(tmp_path, compress):
     assert any("start" == adb._inner(c) for c in adb.log)
 
 
+@pytest.mark.parametrize("method", ["zstd", "zstd-ultra", "tar.gz", "tar.bz2", "tar.xz", "zip"])
+def test_image_every_codec_verifies(tmp_path, method):
+    adb = FakeAdb()
+    access = Access("recovery", False)
+    parts = [p for p in image.list_partitions(adb, "s", access) if p.selected]
+    mf = image.create_image(adb, "s", access, parts, tmp_path / "img", method=method,
+                            level_name="fast", quiesce=False)
+    recs = image.load_manifest(mf.parent)["partitions"]
+    assert all(image.verify_record(mf.parent, r) for r in recs)
+    assert all(r["file"].endswith(image.IMAGE_METHODS[method][1]) for r in recs)
+
+
+def test_image_rejects_7z(tmp_path):
+    adb = FakeAdb()
+    access = Access("recovery", False)
+    parts = [p for p in image.list_partitions(adb, "s", access) if p.selected]
+    with pytest.raises(ImageError):
+        image.create_image(adb, "s", access, parts, tmp_path / "img", method="7z", quiesce=False)
+
+
 def test_upload_image_plain_and_encrypted(tmp_path):
     from quasar_win.cloud import make_provider
     from quasar_win import encryption

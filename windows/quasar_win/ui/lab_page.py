@@ -88,7 +88,12 @@ class LabPage(QWidget):
         self.run_btn.clicked.connect(self._run)
         self.cancel_btn.clicked.connect(lambda: self.task and self.task.cancel.set())
         self.export_btn.clicked.connect(self._export)
-        for b in (self.run_btn, self.cancel_btn, self.export_btn):
+        self.use_btn = QPushButton("Use these settings")
+        self.use_btn.setToolTip("Select a row in the results (or leave none for the smallest) and use that "
+                                "format and level for backups and phone images")
+        self.use_btn.setEnabled(False)
+        self.use_btn.clicked.connect(self._use_settings)
+        for b in (self.run_btn, self.cancel_btn, self.export_btn, self.use_btn):
             run_row.addWidget(b)
         run_row.addStretch()
         pl.addLayout(run_row)
@@ -219,6 +224,20 @@ class LabPage(QWidget):
                    f"({fmt_time(fastest.seconds)}) &nbsp;·&nbsp; <b>Best balance:</b> {names(balanced)}", "good")
         set_status(self.status, f"Done: {len(good)} runs on {fmt_size(good[0].original_size)} of data.", "good")
         self.export_btn.setEnabled(True)
+        self.use_btn.setEnabled(True)
+
+    def _use_settings(self) -> None:
+        good = [r for r in self.results if not r.error]
+        row = self.table.currentRow()
+        pick = self.results[row] if 0 <= row < len(self.results) and not self.results[row].error else None
+        pick = pick or min(good, key=lambda r: r.compressed_size)
+        self.ctx.settings.set("compression_method", pick.method)
+        self.ctx.settings.set("compression_level", pick.level)
+        note = ""
+        if pick.method == "7z":
+            note = " (7-Zip applies to guided backups only; phone images will use Zstandard)"
+        set_status(self.status, f"Saved: {compression.METHODS[pick.method].label} / {pick.level} will be "
+                                f"pre-selected on the Backup and Full Phone Image pages{note}.", "good")
 
     def _export(self) -> None:
         path, _ = QFileDialog.getSaveFileName(self, "Export results", "quasar-compression.csv", "CSV (*.csv)")

@@ -9,8 +9,11 @@ Two ways to get root-level access to the phone's partitions:
 """
 from __future__ import annotations
 
+import bz2
+import gzip
 import hashlib
 import json
+import lzma
 import os
 import re
 import shlex
@@ -22,9 +25,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
+import zipfile
+
 import zstandard
 
-from . import __version__
+from . import __version__, compression
 from .adb import Adb, AdbError
 
 CHUNK = 1024 * 1024
@@ -213,24 +218,57 @@ class Quiesce:
             self.log("Could not resume Android automatically. Reboot the phone.")
 
 
-def _open_out(path: Path, compress: bool, level: int):
+# Lab method key -> (codec name stored in the manifest, file suffix). Only formats that can be
+# written as a single stream are offered for images (7z and tar need a seekable archive).
+IMAGE_METHODS = {"zstd": ("zstd", ".zst"), "zstd-ultra": ("zstd", ".zst"), "tar.gz": ("gzip", ".gz"),
+                 "tar.bz2": ("bzip2", ".bz2"), "tar.xz": ("xz", ".xz"), "zip": ("zip", ".zip")}
+
+
+class _ZipStream:
+    def __init__(self, raw, level: int):
+        self.zf = zipfile.ZipFile(raw, "w", zipfile.ZIP_DEFLATED, compresslevel=level)
+        self.member = self.zf.open("image", "w", force_zip64=True)
+
+    def write(self, data: bytes) -> int:
+        return self.member.write(data)
+
+    def close(self) -> None:
+        self.member.close()
+        self.zf.close()
+
+
+def _open_out(path: Path, compress: bool, method: str, level_name: str):
     raw = open(path, "wb")
     if not compress:
         return raw, raw
-    writer = zstandard.ZstdCompressor(level=level, threads=-1).stream_writer(raw, closefd=False)
-    return writer, raw
+    spec = compression.METHODS[method]
+    level = spec.levels.get(level_name) or list(spec.levels.values())[-1]
+    codec = IMAGE_METHODS[method][0]
+    if codec == "zstd":
+        return zstandard.ZstdCompressor(level=level, threads=-1).stream_writer(raw, closefd=False), raw
+    if codec == "gzip":
+        return gzip.GzipFile(fileobj=raw, mode="wb", compresslevel=level), raw
+    if codec == "bzip2":
+        return bz2.BZ2File(raw, "wb", compresslevel=level), raw
+    if codec == "xz":
+        return lzma.LZMAFile(raw, "wb", preset=level), raw
+    return _ZipStream(raw, level), raw
 
 
 def image_partition(adb: Adb, serial: str, access: Access, part: Partition, out_dir: Path,
-                    compress: bool = True, level: int = 3, on_progress: Progress | None = None,
+                    compress: bool = True, method: str = "zstd", level_name: str = "fast",
+                    on_progress: Progress | None = None,
                     cancel: threading.Event | None = None) -> PartitionRecord:
     out_dir.mkdir(parents=True, exist_ok=True)
-    suffix = ".img.zst" if compress else ".img"
+    if compress and method not in IMAGE_METHODS:
+        raise ImageError(f"{method} can't be used for phone images; pick Zstandard, Gzip, Bzip2, XZ or ZIP.")
+    codec, ext = IMAGE_METHODS[method] if compress else ("none", "")
+    suffix = ".img" + ext
     final, temp = out_dir / f"{part.name}{suffix}", out_dir / f"{part.name}{suffix}.part"
     command = access.wrap(f"dd if={part.dev} bs={CHUNK} 2>/dev/null")
     sha, total, start = hashlib.sha256(), 0, time.perf_counter()
     proc = adb.popen_out(serial, command)
-    writer, raw = _open_out(temp, compress, level)
+    writer, raw = _open_out(temp, compress, method, level_name)
     try:
         while True:
             if cancel and cancel.is_set():
@@ -256,7 +294,7 @@ def image_partition(adb: Adb, serial: str, access: Access, part: Partition, out_
         temp.unlink(missing_ok=True)
         raise
     return PartitionRecord(part.name, part.dev, part.size, part.kind, final.name, sha.hexdigest(),
-                           final.stat().st_size, "zstd" if compress else "none",
+                           final.stat().st_size,                            codec,
                            time.perf_counter() - start)
 
 
@@ -273,7 +311,7 @@ def write_manifest(out_dir: Path, info: dict, access: Access, quiesce: Quiesce |
 
 
 def create_image(adb: Adb, serial: str, access: Access, parts: list[Partition], out_dir: Path,
-                 compress: bool = True, level: int = 3, quiesce: bool = True,
+                 compress: bool = True, method: str = "zstd", level_name: str = "fast", quiesce: bool = True,
                  on_progress: Progress | None = None, cancel: threading.Event | None = None,
                  log: Callable[[str], None] = lambda m: None) -> Path:
     """Image every selected partition into out_dir and write the manifest."""
@@ -287,7 +325,7 @@ def create_image(adb: Adb, serial: str, access: Access, parts: list[Partition], 
     try:
         for part in parts:
             log(f"Imaging {part.name}…")
-            records.append(image_partition(adb, serial, access, part, out_dir, compress, level,
+            records.append(image_partition(adb, serial, access,             part, out_dir, compress, method, level_name,
                                            on_progress, cancel))
     finally:
         if guard:
@@ -351,6 +389,15 @@ def _open_in(path: Path, compression: str):
     f = open(path, "rb")
     if compression == "zstd":
         return zstandard.ZstdDecompressor().stream_reader(f), f
+    if compression == "gzip":
+        return gzip.GzipFile(fileobj=f, mode="rb"), f
+    if compression == "bzip2":
+        return bz2.BZ2File(f, "rb"), f
+    if compression == "xz":
+        return lzma.LZMAFile(f, "rb"), f
+    if compression == "zip":
+        zf = zipfile.ZipFile(f)
+        return zf.open("image"), f
     return f, f
 
 

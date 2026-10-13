@@ -232,6 +232,24 @@ class BackupWizard(QWidget):
         self._refresh_connect()
 
     # ---------- step 4: options ----------
+    def _apply_saved_compression(self) -> None:
+        saved = (self.ctx.settings.get("compression_method"), self.ctx.settings.get("compression_level"))
+        if saved == getattr(self, "_applied", None):
+            return
+        self._applied = saved
+        method = saved[0]
+        i = self.comp_method.findData(method) if method else -1
+        if i >= 0:
+            self.comp_method.setCurrentIndex(i)
+            j = self.comp_level.findData(self.ctx.settings.get("compression_level"))
+            if j >= 0:
+                self.comp_level.setCurrentIndex(j)
+
+    def showEvent(self, event) -> None:  # noqa: N802
+        if self.stack.currentIndex() == 0 or not self.backup_task:
+            self._apply_saved_compression()
+        super().showEvent(event)
+
     def _options_page(self) -> QWidget:
         w, lay = self._panel("Step 4 · Choose what to back up and how to protect it", "")
         self.opt_apk = QCheckBox("Include app APKs (bigger, but restores apps themselves)")
@@ -256,6 +274,7 @@ class BackupWizard(QWidget):
         lay.addLayout(form)
         lay.addWidget(label("Tip: adb backups are already deflate-compressed, so gains are usually small. "
                             "Use the <b>Compression Lab</b> to measure on your own data.", "muted"))
+        self._apply_saved_compression()
 
         self.enc_check = QCheckBox("Encrypt the backup before it leaves this PC (recommended)")
         self.enc_check.setChecked(True)

@@ -5,11 +5,12 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QCheckBox, QFileDialog, QHBoxLayout, QLineEdit, QMessageBox, QPlainTextEdit,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QHBoxLayout, QLineEdit, QMessageBox,
+                               QPlainTextEdit,
                                QProgressBar, QPushButton, QTableWidget, QTableWidgetItem, QTabWidget,
                                QVBoxLayout, QWidget)
 
-from .. import image
+from .. import compression, image
 from ..config import app_dir
 from .context import AppContext
 from .widgets import card, fmt_size, label, page_header, run_task, set_status
@@ -81,14 +82,53 @@ class ImagePage(QWidget):
         t.setSelectionMode(QTableWidget.NoSelection)
         return t
 
+    def _sync_levels(self) -> None:
+        levels = compression.METHODS[self.comp_method.currentData()].levels
+        keep = self.comp_level.currentData()
+        self.comp_level.clear()
+        for lv in compression.LEVEL_ORDER:
+            if lv in levels:
+                self.comp_level.addItem(lv.capitalize(), lv)
+        i = self.comp_level.findData(keep)
+        self.comp_level.setCurrentIndex(i if i >= 0 else self.comp_level.count() - 1)
+
+    def _apply_saved_compression(self) -> None:
+        saved = (self.ctx.settings.get("compression_method"), self.ctx.settings.get("compression_level"))
+        if saved == getattr(self, "_applied", None):
+            return
+        self._applied = saved
+        method = saved[0]
+        i = self.comp_method.findData(method)
+        if i < 0:
+            return
+        self.comp_method.setCurrentIndex(i)
+        self._sync_levels()
+        j = self.comp_level.findData(self.ctx.settings.get("compression_level"))
+        if j >= 0:
+            self.comp_level.setCurrentIndex(j)
+
+    def showEvent(self, event) -> None:  # noqa: N802
+        self._apply_saved_compression()
+        super().showEvent(event)
+
     def _create_tab(self) -> QWidget:
         w = QWidget()
         lay = QVBoxLayout(w)
         self.table = self._table(["Image", "Partition", "Type", "Size"])
         self.table.itemChanged.connect(self._update_total)
         opts = QHBoxLayout()
-        self.compress_box = QCheckBox("Compress with Zstandard")
+        self.compress_box = QCheckBox("Compress")
         self.compress_box.setChecked(True)
+        self.comp_method = QComboBox()
+        for key in image.IMAGE_METHODS:
+            self.comp_method.addItem(compression.METHODS[key].label, key)
+        self.comp_level = QComboBox()
+        for lv in compression.LEVEL_ORDER:
+            self.comp_level.addItem(lv.capitalize(), lv)
+        self.comp_method.currentIndexChanged.connect(self._sync_levels)
+        self.compress_box.toggled.connect(self.comp_method.setEnabled)
+        self.compress_box.toggled.connect(self.comp_level.setEnabled)
+        self._apply_saved_compression()
         self.quiesce_box = QCheckBox("Freeze Android + read-only /data (Magisk mode)")
         self.quiesce_box.setChecked(True)
         self.upload_box = QCheckBox("Upload to cloud afterwards")
@@ -97,6 +137,8 @@ class ImagePage(QWidget):
         self.enc_pass.setPlaceholderText("Encryption passphrase (8+ chars, blank = upload unencrypted)")
         self.total = label("")
         opts.addWidget(self.compress_box)
+        opts.addWidget(self.comp_method)
+        opts.addWidget(self.comp_level)
         opts.addWidget(self.quiesce_box)
         opts.addWidget(self.upload_box)
         opts.addStretch()
@@ -272,6 +314,7 @@ class ImagePage(QWidget):
         stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         out = Path(self.dest.text()) / f"{(self.ctx.device.title if self.ctx.device else 'phone').replace(' ', '_')}-{stamp}"
         compress, quiesce = self.compress_box.isChecked(), self.quiesce_box.isChecked()
+        method, level_name = self.comp_method.currentData(), self.comp_level.currentData()
         upload = self.upload_box.isChecked()
         limit_msg = self.ctx.licensing.check_backup()
         if limit_msg:
@@ -290,7 +333,8 @@ class ImagePage(QWidget):
 
         def work(report, cancel):
             return image.create_image(
-                adb, serial, access, chosen, out, compress=compress, quiesce=quiesce, cancel=cancel,
+                adb, serial, access, chosen, out, compress=compress, method=method, level_name=level_name,
+                quiesce=quiesce, cancel=cancel,
                 on_progress=lambda n, d, s, r: report((offsets[n] + d) / total,
                                                       f"{n}  {fmt_size(d)}/{fmt_size(s)}  {fmt_size(r)}/s"),
                 log=lambda m: report(-1, m))
