@@ -1,7 +1,9 @@
 """License page: current plan, this month's usage, key activation and purchase links."""
 from __future__ import annotations
 
-from PySide6.QtCore import QUrl
+import threading
+
+from PySide6.QtCore import QObject, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QProgressBar, QPushButton, QVBoxLayout, QWidget
 
@@ -9,6 +11,12 @@ from .. import COPYRIGHT, __version__, updater
 from .. import licensing as lic
 from .context import AppContext
 from .widgets import card, fmt_size, label, page_header, set_status
+
+
+class _UpdateSignals(QObject):
+    checked = Signal(object, str)
+    progress = Signal(int, int)
+    status = Signal(str)
 
 
 class LicensePage(QWidget):
@@ -65,13 +73,22 @@ class LicensePage(QWidget):
         root.addLayout(tiers)
 
         upd = card()
-        ul = QHBoxLayout()
+        ul = QVBoxLayout(upd)
+        urow = QHBoxLayout()
         self.update_status = label(f"Quasar {__version__}. Your license and settings carry over when you update.")
         self.update_btn = QPushButton("Check for updates")
         self.update_btn.clicked.connect(self._check_update)
-        ul.addWidget(self.update_status, 1)
-        ul.addWidget(self.update_btn)
-        upd.setLayout(ul)
+        urow.addWidget(self.update_status, 1)
+        urow.addWidget(self.update_btn)
+        self.update_bar = QProgressBar()
+        self.update_bar.setTextVisible(False)
+        self.update_bar.setVisible(False)
+        ul.addLayout(urow)
+        ul.addWidget(self.update_bar)
+        self._upd = _UpdateSignals()
+        self._upd.checked.connect(self._on_checked)
+        self._upd.progress.connect(self._on_progress)
+        self._upd.status.connect(self._on_status)
         root.addWidget(upd)
         self._entry = None
 
@@ -126,45 +143,68 @@ class LicensePage(QWidget):
         if self._entry:
             self._install_update()
             return
-        self.update_btn.setEnabled(False)
-        set_status(self.update_status, "Checking for updates…", "")
+        self._busy(True)
+        set_status(self.update_status, "Step 1 of 2: contacting the update server…", "")
+        threading.Thread(target=self._check_worker, daemon=True).start()
 
-        def done(entry) -> None:
-            self.update_btn.setEnabled(True)
-            if not entry:
-                set_status(self.update_status, f"✔ You're on the latest version ({__version__}).", "good")
-                return
+    def _check_worker(self) -> None:
+        try:
+            self._upd.checked.emit(updater.check(), "")
+        except Exception as exc:
+            self._upd.checked.emit(None, str(exc) or exc.__class__.__name__)
+
+    def _busy(self, on: bool) -> None:
+        self.update_btn.setEnabled(not on)
+        self.update_bar.setVisible(on)
+        self.update_bar.setRange(0, 0)
+
+    def _on_checked(self, entry, error: str) -> None:
+        self._busy(False)
+        if error:
+            set_status(self.update_status, f"✖ Update check failed: {error}", "bad")
+            return
+        if not entry:
+            self.update_btn.setText("Check for updates")
+            set_status(self.update_status, f"✔ Up to date. You have the latest version ({__version__}).", "good")
+            return
+        if updater.can_self_update():
             self._entry = entry
-            if updater.can_self_update():
-                self.update_btn.setText(f"Update to {entry['version']} and restart")
-                set_status(self.update_status, f"Version {entry['version']} is available.", "warn")
-            else:
-                self._entry = None
-                set_status(self.update_status, f"Version {entry['version']} is available. Download it from "
-                           "https://quasarli.github.io (automatic update works in the installed app).", "warn")
-
-        def failed(msg: str) -> None:
-            self.update_btn.setEnabled(True)
-            set_status(self.update_status, msg, "bad")
-
-        run_task(lambda _r, _c: updater.check(), on_done=done, on_failed=failed)
+            self.update_btn.setText(f"Update to {entry['version']} and restart")
+            set_status(self.update_status, f"⬆ Version {entry['version']} is available "
+                       f"(you have {__version__}). Click the button to install it.", "warn")
+        else:
+            set_status(self.update_status, f"⬆ Version {entry['version']} is available (you have {__version__}). "
+                       "Download it from https://quasarli.github.io. One-click update works in the installed app.",
+                       "warn")
 
     def _install_update(self) -> None:
         entry = self._entry
-        self.update_btn.setEnabled(False)
-        set_status(self.update_status, f"Downloading {entry['version']}… Quasar will restart when done.", "")
+        self._busy(True)
+        self.update_bar.setRange(0, 100)
+        self.update_bar.setValue(0)
+        set_status(self.update_status, f"Step 2 of 2: downloading version {entry['version']}…", "")
+        threading.Thread(target=self._install_worker, args=(entry,), daemon=True).start()
 
-        def work(_r, _c):
-            return updater.stage(updater.download(entry))
-
-        def done(new_dir) -> None:
+    def _install_worker(self, entry: dict) -> None:
+        try:
+            zip_path = updater.download(entry, lambda d, t: self._upd.progress.emit(d, t))
+            self._upd.status.emit("Verified. Unpacking the update…")
+            new_dir = updater.stage(zip_path)
+            self._upd.status.emit("Installed. Restarting Quasar…")
             updater.apply_and_restart(new_dir)
+        except Exception as exc:
+            self._upd.checked.emit(None, str(exc) or exc.__class__.__name__)
 
-        def failed(msg: str) -> None:
-            self.update_btn.setEnabled(True)
-            set_status(self.update_status, msg, "bad")
+    def _on_progress(self, done: int, total: int) -> None:
+        if total:
+            self.update_bar.setRange(0, 100)
+            self.update_bar.setValue(int(done * 100 / total))
+        set_status(self.update_status, f"Step 2 of 2: downloading… {fmt_size(done)}"
+                   + (f" of {fmt_size(total)}" if total else ""), "")
 
-        run_task(work, on_done=done, on_failed=failed)
+    def _on_status(self, text: str) -> None:
+        self.update_bar.setRange(0, 0)
+        set_status(self.update_status, text, "")
 
     def _remove(self) -> None:
         self.ctx.licensing.deactivate()
