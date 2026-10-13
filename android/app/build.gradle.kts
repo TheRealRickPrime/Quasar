@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -12,16 +14,29 @@ android {
         applicationId = "com.quasar.mobile"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.3.1"
+        versionCode = 5
+        versionName = "0.3.2"
+    }
+
+    val signingProps = Properties().apply {
+        val f = file(System.getenv("QUASAR_SIGNING_PROPERTIES") ?: "D:/Quasar-licensing/android-signing.properties")
+        if (f.exists()) f.inputStream().use { load(it) }
+    }
+    signingConfigs {
+        if (signingProps.isNotEmpty()) create("release") {
+            storeFile = file(signingProps.getProperty("storeFile"))
+            storePassword = signingProps.getProperty("storePassword")
+            keyAlias = signingProps.getProperty("keyAlias")
+            keyPassword = signingProps.getProperty("keyPassword")
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            // Signed with the debug key so the APK installs directly; replace with a private
-            // keystore before publishing to an app store.
-            signingConfig = signingConfigs.getByName("debug")
+            // Keystore and passwords live outside the repo; releases are never signed with the debug key.
+            signingConfig = signingConfigs.findByName("release")
+                ?: throw GradleException("Release keystore not found. See QUASAR_SIGNING_PROPERTIES.")
         }
     }
 
