@@ -57,7 +57,7 @@ class AppPage(QWidget):
         if apk:
             set_status(self.apk_status, f"✔ APK ready: {apk.name} ({fmt_size(apk.stat().st_size)})", "good")
         else:
-            set_status(self.apk_status, "The Quasar APK isn't bundled yet. When it's built, drop it into "
+            set_status(self.apk_status, "No APK found. Drop it into "
                        "<code>windows\\assets\\apk\\</code> before packaging, or browse to it here.", "warn")
         device = self.ctx.device
         set_status(self.device_status, f"Target phone: <b>{device.title}</b>" if device else

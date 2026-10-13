@@ -16,7 +16,7 @@ Desktop companion to the Android app. It walks you through an ADB backup of a US
 - **Encryption**: AES-256-GCM, optionally wrapped in XChaCha20-Poly1305, scrypt-derived keys, chunk-authenticated. The result is verified before the unencrypted original is deleted.
 - **Cloud upload**: Google Drive, Dropbox, OneDrive, AWS S3 and a local/synced folder. Upload speeds are logged so destinations can be compared. Secrets go to Windows Credential Manager.
 - **Account**: sign in to the Quasar backend (`../backend`) to record sessions and get the profile link.
-- **Android app**: installs the Quasar `.apk` on the phone. Put the built APK in `assets\apk\` before packaging, or browse to it in the app.
+- **Android app**: installs the Quasar `.apk` on the phone. The current APK (0.3.0) is bundled in `assets\apk\`; you can also browse to another one.
 
 ## Run from source
 
