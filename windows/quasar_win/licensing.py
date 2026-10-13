@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -95,10 +96,15 @@ def verify_gumroad(key: str, count_use: bool = False, timeout: float = 10) -> Li
     network_error = False
     for permalink, tier in GUMROAD_PRODUCTS.items():
         try:
-            r = requests.post(GUMROAD_VERIFY_URL, timeout=timeout, data={
-                "product_permalink": permalink, "license_key": key,
-                "increment_uses_count": "true" if count_use else "false"})
-            data = r.json()
+            def call(field: str, value: str) -> dict:
+                return requests.post(GUMROAD_VERIFY_URL, timeout=timeout, data={
+                    field: value, "license_key": key,
+                    "increment_uses_count": "true" if count_use else "false"}).json()
+            data = call("product_permalink", permalink)
+            # Newer Gumroad products require the long product_id, which the error message supplies.
+            hint = re.search(r"'product_id' to '([^']+)'", str(data.get("message", "")))
+            if hint:
+                data = call("product_id", hint.group(1))
         except (requests.RequestException, ValueError):
             network_error = True
             continue
