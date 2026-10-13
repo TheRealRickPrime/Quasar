@@ -1,0 +1,21 @@
+Quasar for Windows - End User License Agreement
+
+Copyright (c) 2026 TheRealRickPrime. All rights reserved.
+Contact: TheRealRickPrime@outlook.com
+
+The software in this folder ("windows/") is proprietary and source-available. It is NOT covered by
+the MIT license that applies to the rest of this repository.
+
+1. Grant. You may install and use the software for personal or internal business use under the
+   plan (Free, Supporter or Pro) you hold. A paid license key is for the purchaser only.
+2. Restrictions. You may not sell, sublicense, rent or redistribute the software or license keys;
+   remove or alter copyright notices; circumvent or disable the usage limits or license checks; or
+   publish modified versions of the software.
+3. You may read the source and modify it for your own private use.
+4. Ownership. All rights not expressly granted are reserved by the copyright holder.
+5. Warranty. The software is provided "as is" without warranty. Imaging and restoring phone
+   partitions can permanently damage a device or destroy data; you use these features at your own
+   risk and are responsible for keeping backups.
+6. Refunds are at the seller's discretion. Keys may be revoked for violation of these terms.
+
+This text is a plain-language template, not legal advice; have a lawyer review it before relying on it.

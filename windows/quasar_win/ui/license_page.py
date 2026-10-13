@@ -5,6 +5,7 @@ from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QProgressBar, QPushButton, QVBoxLayout, QWidget
 
+from .. import COPYRIGHT
 from .. import licensing as lic
 from .context import AppContext
 from .widgets import card, fmt_size, label, page_header, set_status
@@ -67,12 +68,25 @@ class LicensePage(QWidget):
         sponsor = QPushButton("Sponsor on GitHub (free to set up, no fees)")
         sponsor.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(lic.SPONSORS_URL)))
         extra.addWidget(sponsor)
+        for text, url in (("Ko-fi", lic.KOFI_URL), ("Buy Me a Coffee", lic.BUYMEACOFFEE_URL)):
+            if url:
+                b = QPushButton(text)
+                b.clicked.connect(lambda _c=False, u=url: QDesktopServices.openUrl(QUrl(u)))
+                extra.addWidget(b)
+        mail = QPushButton("Email receipt")
+        mail.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(
+            f"mailto:{lic.SUPPORT_EMAIL}?subject=Quasar%20license%20request&body="
+            "Plan%3A%20%0AEmail%20for%20the%20key%3A%20%0APayment%20receipt%2Fid%3A%20")))
+        extra.addWidget(mail)
+        if lic.WHATSAPP_NUMBER:
+            wa = QPushButton("WhatsApp")
+            wa.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(f"https://wa.me/{lic.WHATSAPP_NUMBER}")))
+            extra.addWidget(wa)
         extra.addStretch()
         root.addLayout(extra)
-        how = ("After paying, include your email in the PayPal note"
-               + (f" and send the receipt to <b>{lic.SUPPORT_EMAIL}</b>" if lic.SUPPORT_EMAIL else
-                  " and contact the developer with the receipt")
-               + ". You'll get a key to paste above. Keys work offline and are tied to no device.")
+        how = (f"After paying, email the receipt and the plan you bought to <b>{lic.SUPPORT_EMAIL}</b>"
+               "; you'll get a key to paste above. Keys work offline and are tied to no device.<br>"
+               f"{COPYRIGHT}")
         root.addWidget(label(how, "muted"))
         root.addStretch()
         self.refresh()

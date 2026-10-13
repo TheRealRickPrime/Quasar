@@ -22,7 +22,11 @@ from .config import app_dir
 PUBLIC_KEY_B64 = "fPr//U9S+wzVBpzgWc+fJe6HVcHnQuYHxAqe3svBo/s="
 PAYPAL_USER = "lircin"
 SPONSORS_URL = "https://github.com/sponsors/TheRealRickPrime"
-SUPPORT_EMAIL = ""  # where buyers send their PayPal receipt to get a key
+SUPPORT_EMAIL = "TheRealRickPrime@outlook.com"  # where buyers send their receipt to get a key
+# Optional extras: leave blank to hide. WHATSAPP_NUMBER is digits only with country code, e.g. 15551234567.
+KOFI_URL = ""
+BUYMEACOFFEE_URL = ""
+WHATSAPP_NUMBER = ""
 GB = 1024 ** 3
 
 

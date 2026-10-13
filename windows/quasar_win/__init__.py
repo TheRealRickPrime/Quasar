@@ -2,3 +2,4 @@
 
 __version__ = "0.2.0"
 APP_NAME = "Quasar"
+COPYRIGHT = "Copyright (c) 2026 TheRealRickPrime. All rights reserved."

@@ -35,7 +35,7 @@ def build_zip(tier: str, email: str) -> Path:
         for path in DIST.rglob("*"):
             if path.is_file():
                 z.write(path, Path("Quasar") / path.relative_to(DIST))
-        z.writestr("Quasar/README.txt", README.format(version=__version__, tier=tier.capitalize(), note=note))
+        z.write(ROOT / "LICENSE.txt", "Quasar/LICENSE.txt")`n        z.writestr("Quasar/README.txt", README.format(version=__version__, tier=tier.capitalize(), note=note))
         if tier != "free":
             z.writestr("Quasar/license.key", make_key(tier, email))
     return target
