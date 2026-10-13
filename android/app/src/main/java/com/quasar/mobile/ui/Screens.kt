@@ -236,6 +236,12 @@ private fun LicenseScreen(vm: MainViewModel) {
         Button(onClick = { open("https://quasarlabs3.gumroad.com/l/qygwf") }, Modifier.fillMaxWidth()) { Text("Buy Supporter - $10") }
         Button(onClick = { open("https://quasarlabs3.gumroad.com/l/qwjtj") }, Modifier.fillMaxWidth()) { Text("Buy Pro - $25") }
     }
+    Section("Updates") {
+        Text(vm.updateMessage)
+        Button(onClick = { vm.checkOrInstallUpdate() }, enabled = !vm.updateBusy, modifier = Modifier.fillMaxWidth()) {
+            Text("Check for updates")
+        }
+    }
     Text("Support: quasarlabs-inc@outlook.com", color = QuasarColors.steel)
     Text("Copyright (c) 2026 Quasar Labs. All rights reserved.", color = QuasarColors.softGray,
         style = MaterialTheme.typography.bodySmall)

@@ -28,6 +28,8 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.quasar.mobile.update.UpdateInfo
+import com.quasar.mobile.update.Updater
 
 data class LabRow(val format: ArchiveFormat, val sizeBytes: Long?, val millis: Long, val error: String? = null)
 
@@ -48,6 +50,44 @@ class MainViewModel(private val app: Application) : AndroidViewModel(app) {
     var licenseEmail by mutableStateOf(licenses.cachedLicense()?.email ?: ""); private set
     var licenseBusy by mutableStateOf(false); private set
     var licenseMessage by mutableStateOf<String?>(null)
+
+    // Update state
+    private val updater = Updater(app)
+    var updateMessage by mutableStateOf("Version ${app.packageManager.getPackageInfo(app.packageName, 0).versionName}. Your license carries over when you update.")
+        private set
+    var updateBusy by mutableStateOf(false); private set
+    private var pendingUpdate: UpdateInfo? = null
+    private var downloaded: java.io.File? = null
+
+    fun checkOrInstallUpdate() {
+        if (updateBusy) return
+        updateBusy = true
+        viewModelScope.launch {
+            try {
+                val file = downloaded
+                if (file != null) {
+                    if (updater.install(file)) updateMessage = "Installer opened. Tap Update to finish."
+                    else updateMessage = "Allow installs from Quasar in the settings page that opened, then tap Update again."
+                    return@launch
+                }
+                val info = pendingUpdate ?: withContext(Dispatchers.IO) { updater.check() }
+                if (info == null) { updateMessage = "You're on the latest version."; return@launch }
+                pendingUpdate = info
+                updateMessage = "Downloading ${info.version}..."
+                downloaded = withContext(Dispatchers.IO) {
+                    updater.download(info) { p -> updateMessage = "Downloading ${info.version}... ${(p * 100).toInt()}%" }
+                }
+                updateMessage = "Version ${info.version} downloaded and verified."
+                if (!updater.install(downloaded!!)) {
+                    updateMessage = "Allow installs from Quasar in the settings page that opened, then tap Update again."
+                }
+            } catch (e: Exception) {
+                updateMessage = "Update failed: ${e.message ?: "couldn't reach the update server."}"
+            } finally {
+                updateBusy = false
+            }
+        }
+    }
 
     // Backup state
     val sources = mutableStateListOf<PickedSource>()

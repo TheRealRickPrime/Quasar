@@ -5,7 +5,7 @@ from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QProgressBar, QPushButton, QVBoxLayout, QWidget
 
-from .. import COPYRIGHT
+from .. import COPYRIGHT, __version__, updater
 from .. import licensing as lic
 from .context import AppContext
 from .widgets import card, fmt_size, label, page_header, set_status
@@ -64,6 +64,17 @@ class LicensePage(QWidget):
             tiers.addWidget(box)
         root.addLayout(tiers)
 
+        upd = card()
+        ul = QHBoxLayout()
+        self.update_status = label(f"Quasar {__version__}. Your license and settings carry over when you update.")
+        self.update_btn = QPushButton("Check for updates")
+        self.update_btn.clicked.connect(self._check_update)
+        ul.addWidget(self.update_status, 1)
+        ul.addWidget(self.update_btn)
+        upd.setLayout(ul)
+        root.addWidget(upd)
+        self._entry = None
+
         extra = QHBoxLayout()
         mail = QPushButton("Contact support")
         mail.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(
@@ -110,6 +121,50 @@ class LicensePage(QWidget):
         self.key_edit.clear()
         set_status(self.key_status, f"✔ {lic.TIERS[result.tier].name} license activated. Thank you!", "good")
         self.refresh()
+
+    def _check_update(self) -> None:
+        if self._entry:
+            self._install_update()
+            return
+        self.update_btn.setEnabled(False)
+        set_status(self.update_status, "Checking for updates…", "")
+
+        def done(entry) -> None:
+            self.update_btn.setEnabled(True)
+            if not entry:
+                set_status(self.update_status, f"✔ You're on the latest version ({__version__}).", "good")
+                return
+            self._entry = entry
+            if updater.can_self_update():
+                self.update_btn.setText(f"Update to {entry['version']} and restart")
+                set_status(self.update_status, f"Version {entry['version']} is available.", "warn")
+            else:
+                self._entry = None
+                set_status(self.update_status, f"Version {entry['version']} is available. Download it from "
+                           "https://quasarli.github.io (automatic update works in the installed app).", "warn")
+
+        def failed(msg: str) -> None:
+            self.update_btn.setEnabled(True)
+            set_status(self.update_status, msg, "bad")
+
+        run_task(lambda _r, _c: updater.check(), on_done=done, on_failed=failed)
+
+    def _install_update(self) -> None:
+        entry = self._entry
+        self.update_btn.setEnabled(False)
+        set_status(self.update_status, f"Downloading {entry['version']}… Quasar will restart when done.", "")
+
+        def work(_r, _c):
+            return updater.stage(updater.download(entry))
+
+        def done(new_dir) -> None:
+            updater.apply_and_restart(new_dir)
+
+        def failed(msg: str) -> None:
+            self.update_btn.setEnabled(True)
+            set_status(self.update_status, msg, "bad")
+
+        run_task(work, on_done=done, on_failed=failed)
 
     def _remove(self) -> None:
         self.ctx.licensing.deactivate()
