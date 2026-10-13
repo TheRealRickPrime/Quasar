@@ -105,9 +105,9 @@ def test_gumroad_activation_and_refund(tmp_path, monkeypatch):
 
     def post(url, data=None, timeout=0):
         if data["license_key"] == "GOOD" and data["product_permalink"] == "qwjtj":
-            return _Resp({"success": True, "purchase": {"email": "b@x.y", "id": "abcdefghij"}})
+            return _Resp({"success": True, "purchase": {"email": "b@x.y", "id": "abcdefghij", "short_product_id": "qwjtj"}})
         if data["license_key"] == "REFUND" and data["product_permalink"] == "qygwf":
-            return _Resp({"success": True, "purchase": {"refunded": True}})
+            return _Resp({"success": True, "purchase": {"refunded": True, "short_product_id": "qygwf"}})
         return _Resp({"success": False})
 
     monkeypatch.setattr(requests, "post", post)

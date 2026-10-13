@@ -111,6 +111,10 @@ def verify_gumroad(key: str, count_use: bool = False, timeout: float = 10) -> Li
         if not data.get("success"):
             continue
         purchase = data.get("purchase", {})
+        actual = purchase.get("short_product_id") or purchase.get("permalink") or ""
+        if actual not in GUMROAD_PRODUCTS:
+            continue
+        tier = GUMROAD_PRODUCTS[actual]
         if purchase.get("refunded") or purchase.get("chargebacked") or purchase.get("disputed"):
             raise LicenseError("This purchase was refunded or disputed, so the key is no longer valid.")
         if purchase.get("subscription_cancelled_at") or purchase.get("subscription_failed_at"):
