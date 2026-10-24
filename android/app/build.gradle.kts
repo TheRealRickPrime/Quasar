@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+val unsignedRelease = providers.gradleProperty("unsignedRelease").orNull == "true"
+
 android {
     namespace = "com.quasar.mobile"
     compileSdk = 35
@@ -52,7 +54,7 @@ android {
         release {
             isMinifyEnabled = false
             // Keystore and passwords live outside the repo; releases are never signed with the debug key.
-            signingConfig = signingConfigs.findByName("release")
+            signingConfig = if (unsignedRelease) null else signingConfigs.findByName("release")
         }
     }
 
@@ -82,8 +84,8 @@ android {
 tasks.configureEach {
     if (name.startsWith("package") && name.endsWith("Release")) {
         doFirst {
-            check(System.getenv("QUASAR_SIGNING_PROPERTIES")?.let { File(it).isFile }
-                ?: File("D:/Quasar-licensing/android-signing.properties").isFile) {
+            check(unsignedRelease || (System.getenv("QUASAR_SIGNING_PROPERTIES")?.let { File(it).isFile }
+                ?: File("D:/Quasar-licensing/android-signing.properties").isFile)) {
                 "Release keystore configuration missing. See QUASAR_SIGNING_PROPERTIES."
             }
         }
@@ -111,7 +113,7 @@ dependencies {
     }
 
     implementation("com.github.luben:zstd-jni:1.5.7-4@aar")
-    implementation("com.goterl:lazysodium-android:5.1.0@aar")
+    implementation(files(rootProject.file("native/lazysodium-android-5.1.0-quasar.aar")))
     implementation("net.java.dev.jna:jna:5.19.1@aar")
 
     implementation("org.apache.commons:commons-compress:1.26.2")

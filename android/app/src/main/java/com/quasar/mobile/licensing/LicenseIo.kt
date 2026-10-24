@@ -17,6 +17,7 @@ class OkHttpPoster(
     override fun postForm(url: String, fields: Map<String, String>): String {
         val body = FormBody.Builder().also { b -> fields.forEach { (k, v) -> b.add(k, v) } }.build()
         client.newCall(Request.Builder().url(url).post(body).build()).execute().use { r ->
+            if (r.code >= 500 || r.code == 429) throw IOException("License service temporarily unavailable")
             return r.body?.string() ?: throw IOException("Empty response")
         }
     }

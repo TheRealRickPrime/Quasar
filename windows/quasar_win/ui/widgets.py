@@ -6,7 +6,7 @@ import threading
 import traceback
 from typing import Callable
 
-from PySide6.QtCore import QObject, QRectF, QRunnable, Qt, QThreadPool, QTimer, Signal
+from PySide6.QtCore import QObject, QRectF, QRunnable, Qt, QThreadPool, Signal
 from PySide6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QRadialGradient
 from PySide6.QtWidgets import QFrame, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
@@ -31,21 +31,13 @@ def fmt_time(seconds: float) -> str:
 
 
 class SpaceBackground(QWidget):
-    """Deep-space gradient with softly twinkling stars."""
+    """Quiet, deterministic space texture behind opaque reading surfaces."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         rng = random.Random(42)
         self._stars = [(rng.random(), rng.random(), rng.choice((1, 1, 1.4, 2)), rng.random() * 6.28)
-                       for _ in range(160)]
-        self._phase = 0.0
-        timer = QTimer(self)
-        timer.timeout.connect(self._tick)
-        timer.start(80)
-
-    def _tick(self) -> None:
-        self._phase += 0.06
-        self.update()
+                       for _ in range(100)]
 
     def paintEvent(self, _event) -> None:
         import math
@@ -64,7 +56,7 @@ class SpaceBackground(QWidget):
             p.fillRect(self.rect(), glow)
         p.setPen(Qt.NoPen)
         for x, y, size, phase in self._stars:
-            alpha = int(120 + 110 * math.sin(self._phase + phase))
+            alpha = int(50 + 35 * math.sin(phase))
             p.setBrush(QColor(225, 238, 255, max(40, min(alpha, 255))))
             p.drawEllipse(QRectF(x * w, y * h, size, size))
 

@@ -49,7 +49,10 @@ class AppPage(QWidget):
         typed = self.path.text().strip()
         if typed and Path(typed).is_file():
             return Path(typed)
-        bundled = sorted(resource_path("apk").glob("*.apk")) if resource_path("apk").exists() else []
+        label = self.ctx.licensing.edition.artifact_label
+        bundled = sorted(resource_path("apk").glob(f"Quasar-Android-{label}-*.apk"))
+        if not bundled:
+            bundled = sorted(resource_path("apk").glob("*.apk")) if resource_path("apk").exists() else []
         return bundled[-1] if bundled else None
 
     def _refresh(self, *_a) -> None:

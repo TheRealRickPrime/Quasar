@@ -4,3 +4,5 @@ build/
 app/build/
 *.iml
 .idea/
+.kotlin/
+__pycache__/

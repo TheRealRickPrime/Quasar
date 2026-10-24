@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import base64
 import json
-import re
 import sys
 import time
 from dataclasses import dataclass
@@ -19,11 +18,16 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 from .config import app_dir
+from .editions import Edition, distribution
 
 PUBLIC_KEY_B64 = "fPr//U9S+wzVBpzgWc+fJe6HVcHnQuYHxAqe3svBo/s="
 SUPPORT_EMAIL = "quasarlabs-inc@outlook.com"
 GUMROAD_VERIFY_URL = "https://api.gumroad.com/v2/licenses/verify"
 GUMROAD_PRODUCTS = {"qygwf": "supporter", "qwjtj": "pro"}  # Gumroad permalink -> tier
+GUMROAD_PRODUCT_IDS = {
+    "7sQ_4QWbmr1Miy5LYzh-Bw==": "supporter",
+    "9R_AkG7S8By0ZotuYyM1Lg==": "pro",
+}
 BUY_URLS = {"supporter": "https://quasarlabs3.gumroad.com/l/qygwf",
             "pro": "https://quasarlabs3.gumroad.com/l/qwjtj"}
 RECHECK_DAYS, OFFLINE_GRACE_DAYS = 3, 30
@@ -46,6 +50,8 @@ class Tier:
 
 TIERS = {
     "free": Tier("free", "Free", 0, 6, 2, "6 backups and 2 GB of cloud upload per month."),
+    "free-ads": Tier("free-ads", "Free with Ads", 0, 10, 2,
+                     "10 backups and 2 GB of cloud upload per month. Optional affiliate recommendations."),
     "supporter": Tier("supporter", "Supporter", 10, 15, 30,
                       "15 backups and 30 GB of cloud upload per month."),
     "pro": Tier("pro", "Pro", 25, None, None, "Unlimited backups and cloud upload. One-time payment."),
@@ -53,6 +59,10 @@ TIERS = {
 
 
 class LicenseError(Exception):
+    pass
+
+
+class LicenseNetworkError(LicenseError):
     pass
 
 
@@ -79,7 +89,7 @@ def verify_key(key: str, public_key_b64: str = PUBLIC_KEY_B64) -> License:
         data = json.loads(payload)
     except (InvalidSignature, ValueError):
         raise LicenseError("License key is invalid or has been altered.") from None
-    if data.get("tier") not in TIERS or data["tier"] == "free":
+    if data.get("tier") not in ("supporter", "pro"):
         raise LicenseError("License key has an unknown tier.")
     lic = License(data["tier"], data.get("email", ""), data.get("id", ""), data.get("issued", ""),
                   data.get("expires", ""))
@@ -94,35 +104,46 @@ def verify_gumroad(key: str, count_use: bool = False, timeout: float = 10) -> Li
 
     key = key.strip()
     network_error = False
-    for permalink, tier in GUMROAD_PRODUCTS.items():
+    for product_id, tier in GUMROAD_PRODUCT_IDS.items():
         try:
             def call(field: str, value: str) -> dict:
-                return requests.post(GUMROAD_VERIFY_URL, timeout=timeout, data={
+                response = requests.post(GUMROAD_VERIFY_URL, timeout=timeout, data={
                     field: value, "license_key": key,
-                    "increment_uses_count": "true" if count_use else "false"}).json()
-            data = call("product_permalink", permalink)
-            # Newer Gumroad products require the long product_id, which the error message supplies.
-            hint = re.search(r"'product_id' to '([^']+)'", str(data.get("message", "")))
-            if hint:
-                data = call("product_id", hint.group(1))
+                    "increment_uses_count": "true" if count_use else "false"})
+                if response.status_code >= 500 or response.status_code == 429:
+                    raise requests.ConnectionError("License service unavailable")
+                result = response.json()
+                if not isinstance(result, dict):
+                    raise ValueError("Invalid license response")
+                return result
+            data = call("product_id", product_id)
         except (requests.RequestException, ValueError):
             network_error = True
             continue
-        if not data.get("success"):
+        if data.get("success") is not True:
             continue
         purchase = data.get("purchase", {})
-        actual = purchase.get("short_product_id") or purchase.get("permalink") or ""
-        if actual not in GUMROAD_PRODUCTS:
+        if not isinstance(purchase, dict):
+            network_error = True
             continue
-        tier = GUMROAD_PRODUCTS[actual]
+        identities = [
+            GUMROAD_PRODUCT_IDS.get(purchase["product_id"]) if purchase.get("product_id") else None,
+            GUMROAD_PRODUCTS.get(purchase["short_product_id"]) if purchase.get("short_product_id") else None,
+            GUMROAD_PRODUCTS.get(purchase["permalink"]) if purchase.get("permalink") else None,
+        ]
+        supplied = [v for k, v in zip(("product_id", "short_product_id", "permalink"), identities)
+                    if purchase.get(k)]
+        if not supplied or any(value != tier for value in supplied):
+            continue
         if purchase.get("refunded") or purchase.get("chargebacked") or purchase.get("disputed"):
             raise LicenseError("This purchase was refunded or disputed, so the key is no longer valid.")
         if purchase.get("subscription_cancelled_at") or purchase.get("subscription_failed_at"):
             raise LicenseError("This subscription is no longer active.")
         return License(tier, purchase.get("email", ""), purchase.get("id", "")[:8],
                        time.strftime("%Y-%m-%d"))
-    raise LicenseError("Couldn't reach the license server. Check your internet connection and try again."
-                       if network_error else "That license key wasn't found. Check it and try again.")
+    if network_error:
+        raise LicenseNetworkError("Couldn't reach the license server. Check your internet connection and try again.")
+    raise LicenseError("That license key wasn't found. Check it and try again.")
 
 
 def _exe_dir() -> Path:
@@ -132,25 +153,37 @@ def _exe_dir() -> Path:
 class Licensing:
     """Current tier plus this month's usage, persisted in %APPDATA%\\Quasar."""
 
-    def __init__(self, directory: Path | None = None, public_key_b64: str = PUBLIC_KEY_B64) -> None:
+    def __init__(self, directory: Path | None = None, public_key_b64: str = PUBLIC_KEY_B64,
+                 edition: Edition | None = None) -> None:
         self.dir = directory or app_dir()
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self.edition = edition if edition is not None else distribution()
         self.public_key = public_key_b64
         self.license: License | None = None
+        self._gumroad_checked = 0.0
         self.problem = ""
         self.reload()
 
     # ----- license -----
     def reload(self) -> None:
-        self.license, self.problem = None, ""
-        for path in (self.dir / "license.key", _exe_dir() / "license.key"):
+        self.problem = ""
+        self._gumroad_checked = 0.0
+        local = self.dir / "license.key"
+        migrated = self.dir / "license-imported"
+        paths = (local,) if local.exists() or migrated.exists() else (local, _exe_dir() / "license.key")
+        for path in paths:
             if path.is_file():
                 try:
                     text = path.read_text(encoding="utf-8").strip()
                     self.license = (verify_key(text, self.public_key) if text.startswith("QSR1.")
                                     else self._cached_gumroad(text))
+                    if path != local:
+                        local.write_text(text, encoding="utf-8")
+                        migrated.touch()
                     return
                 except (LicenseError, OSError) as exc:
                     self.problem = str(exc)
+        self.license = None
 
     def _cached_gumroad(self, key: str) -> License:
         """Use the last successful check; re-verify online every few days, tolerate being offline."""
@@ -159,19 +192,32 @@ class Licensing:
             cache = json.loads(cache_path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             cache = {}
-        if cache.get("key") != key:
+        if (not isinstance(cache, dict) or cache.get("key") != key
+                or not isinstance(cache.get("checked"), (int, float))):
             cache = {}
         age = (time.time() - cache.get("checked", 0)) / 86400 if cache else 1e9
+        if age < 0:
+            age = 1e9
         if age >= RECHECK_DAYS:
             try:
                 lic = verify_gumroad(key, timeout=4)
-            except LicenseError as exc:
-                if age >= OFFLINE_GRACE_DAYS or "Couldn't reach" not in str(exc):
+            except LicenseNetworkError:
+                if age >= OFFLINE_GRACE_DAYS:
                     raise
+            except LicenseError:
+                cache_path.unlink(missing_ok=True)
+                raise
             else:
                 cache = {"key": key, "checked": time.time(), "license": lic.__dict__}
                 cache_path.write_text(json.dumps(cache), encoding="utf-8")
-        return License(**cache["license"])
+        try:
+            lic = License(**cache["license"])
+        except (KeyError, TypeError) as exc:
+            raise LicenseError("The saved license needs online activation again.") from exc
+        if lic.tier not in ("supporter", "pro"):
+            raise LicenseError("The saved license has an invalid paid tier.")
+        self._gumroad_checked = cache["checked"]
+        return lic
 
     def activate(self, key: str) -> License:
         key = key.strip()
@@ -188,11 +234,19 @@ class Licensing:
     def deactivate(self) -> None:
         (self.dir / "license.key").unlink(missing_ok=True)
         (self.dir / "gumroad.json").unlink(missing_ok=True)
+        (self.dir / "license-imported").touch()
         self.reload()
 
     @property
     def tier(self) -> Tier:
-        return TIERS[self.license.tier if self.license else "free"]
+        active = self.license and (self._gumroad_checked == 0 or
+                                  0 <= time.time() - self._gumroad_checked < OFFLINE_GRACE_DAYS * 86400)
+        return TIERS[self.license.tier if active else
+                     ("free-ads" if self.edition is Edition.FREE_ADS else "free")]
+
+    @property
+    def show_affiliates(self) -> bool:
+        return self.edition is Edition.FREE_ADS and self.tier.key == "free-ads"
 
     # ----- usage -----
     def _usage(self) -> dict:
@@ -230,6 +284,8 @@ class Licensing:
         return ""
 
     def check_upload(self, size: int) -> str:
+        if size < 0:
+            raise ValueError("Upload size cannot be negative.")
         limit = self.upload_limit_bytes
         if limit is not None and self.upload_used + size > limit:
             left = max(limit - self.upload_used, 0) / GB
@@ -244,6 +300,8 @@ class Licensing:
         self._save(data)
 
     def record_upload(self, size: int) -> None:
+        if size < 0:
+            raise ValueError("Upload size cannot be negative.")
         data = self._usage()
         data["upload_bytes"] += int(size)
         self._save(data)

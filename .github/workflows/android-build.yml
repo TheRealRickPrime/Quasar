@@ -1,0 +1,32 @@
+name: Compile unsigned Android editions
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Test and compile all editions without signing credentials
+        working-directory: android
+        run: |
+          set -euo pipefail
+          export JAVA_HOME="$JAVA_HOME_17_X64"
+          bash gradlew :app:testFreeReleaseUnitTest :app:assembleRelease \
+            -PunsignedRelease=true -Pkotlin.compiler.execution.strategy=in-process \
+            --no-daemon --max-workers=2 --console=plain
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: quasar-unsigned-intermediates
+          path: |
+            android/app/build/outputs/apk/*/release/*-unsigned.apk
+            android/app/build/test-results/testFreeReleaseUnitTest/TEST-*.xml
+          if-no-files-found: error
+          retention-days: 14

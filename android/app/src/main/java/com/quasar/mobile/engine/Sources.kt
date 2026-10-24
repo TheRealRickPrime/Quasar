@@ -88,7 +88,9 @@ class TreeWriter(private val ctx: Context, treeUri: Uri) {
     fun open(path: String, mime: String = "application/octet-stream"): OutputStream {
         val parent = dir(path.substringBeforeLast('/', ""))
         val name = path.substringAfterLast('/')
-        parent.findFile(name)?.delete()
+        parent.findFile(name)?.let {
+            if (it.isDirectory || !it.delete()) throw IOException("Cannot replace $name; choose an empty folder")
+        }
         val f = parent.createFile(mime, name) ?: throw IOException("Cannot create $name")
         return ctx.contentResolver.openOutputStream(f.uri) ?: throw IOException("Cannot write $name")
     }

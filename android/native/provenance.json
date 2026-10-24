@@ -1,0 +1,192 @@
+{
+  "sourceUrl": "https://download.libsodium.org/libsodium/releases/libsodium-1.0.22.tar.gz",
+  "sourceSHA256": "adbdd8f16149e81ac6078a03aca6fc03b592b89ef7b5ed83841c086191be3349",
+  "tag": "1.0.22-RELEASE",
+  "sourceCommit": "77e1ce5d6dee871c49ef211222ba18ef0c486bda",
+  "ndk": "28.2.13676358",
+  "api": 26,
+  "baselineAarSHA256": "46a7e67681cc280b5f06dcbe6859d84ee341a6e7c50cd1cefe69495dee589617",
+  "ldflags": "-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384 -Wl,-z,relro,-z,now",
+  "androidRuntimeTested": false,
+  "libraries": [
+    {
+      "abi": "arm64-v8a",
+      "sha256": "168d18633d5e6d33dff9d02cd3a354a40624911402419805b66f9256a5bcbbf0",
+      "segments": [
+        {
+          "type": "LOAD",
+          "offset": 0,
+          "vaddr": 0,
+          "memSize": 138372,
+          "align": 16384
+        },
+        {
+          "type": "LOAD",
+          "offset": 138372,
+          "vaddr": 154756,
+          "memSize": 291692,
+          "align": 16384
+        },
+        {
+          "type": "LOAD",
+          "offset": 430064,
+          "vaddr": 462832,
+          "memSize": 12304,
+          "align": 16384
+        },
+        {
+          "type": "LOAD",
+          "offset": 432176,
+          "vaddr": 481328,
+          "memSize": 1672,
+          "align": 16384
+        },
+        {
+          "type": "GNU_RELRO",
+          "offset": 430064,
+          "vaddr": 462832,
+          "memSize": 12304,
+          "align": 1
+        }
+      ],
+      "baselineExportCount": 610,
+      "exportCount": 757,
+      "missingExports": []
+    },
+    {
+      "abi": "armeabi-v7a",
+      "sha256": "7cfa65ecc45829320a501180841376e2cfcc9dd04481024eb439e8c5cc1ebd82",
+      "segments": [
+        {
+          "type": "LOAD",
+          "offset": 0,
+          "vaddr": 0,
+          "memSize": 83526,
+          "align": 16384
+        },
+        {
+          "type": "LOAD",
+          "offset": 83536,
+          "vaddr": 99920,
+          "memSize": 352272,
+          "align": 16384
+        },
+        {
+          "type": "LOAD",
+          "offset": 435808,
+          "vaddr": 468576,
+          "memSize": 6560,
+          "align": 16384
+        },
+        {
+          "type": "LOAD",
+          "offset": 436844,
+          "vaddr": 485996,
+          "memSize": 1284,
+          "align": 16384
+        },
+        {
+          "type": "GNU_RELRO",
+          "offset": 435808,
+          "vaddr": 468576,
+          "memSize": 6560,
+          "align": 1
+        }
+      ],
+      "baselineExportCount": 610,
+      "exportCount": 757,
+      "missingExports": []
+    },
+    {
+      "abi": "x86_64",
+      "sha256": "ec6b66571309cbc5e270ee92f959e9b90b9434637170975963c4f27b5090e10c",
+      "segments": [
+        {
+          "type": "LOAD",
+          "offset": 0,
+          "vaddr": 0,
+          "memSize": 138388,
+          "align": 16384
+        },
+        {
+          "type": "LOAD",
+          "offset": 138400,
+          "vaddr": 154784,
+          "memSize": 443472,
+          "align": 16384
+        },
+        {
+          "type": "LOAD",
+          "offset": 581872,
+          "vaddr": 614640,
+          "memSize": 7952,
+          "align": 16384
+        },
+        {
+          "type": "LOAD",
+          "offset": 583968,
+          "vaddr": 633120,
+          "memSize": 2124,
+          "align": 16384
+        },
+        {
+          "type": "GNU_RELRO",
+          "offset": 581872,
+          "vaddr": 614640,
+          "memSize": 7952,
+          "align": 1
+        }
+      ],
+      "baselineExportCount": 610,
+      "exportCount": 757,
+      "missingExports": []
+    },
+    {
+      "abi": "x86",
+      "sha256": "99d2763b856f5b26635962ac9fb27f72a85c9ae9adbcc43ae63d6e80bd017906",
+      "segments": [
+        {
+          "type": "LOAD",
+          "offset": 0,
+          "vaddr": 0,
+          "memSize": 128956,
+          "align": 16384
+        },
+        {
+          "type": "LOAD",
+          "offset": 128960,
+          "vaddr": 145344,
+          "memSize": 496736,
+          "align": 16384
+        },
+        {
+          "type": "LOAD",
+          "offset": 625696,
+          "vaddr": 658464,
+          "memSize": 13280,
+          "align": 16384
+        },
+        {
+          "type": "LOAD",
+          "offset": 626836,
+          "vaddr": 675988,
+          "memSize": 1432,
+          "align": 16384
+        },
+        {
+          "type": "GNU_RELRO",
+          "offset": 625696,
+          "vaddr": 658464,
+          "memSize": 13280,
+          "align": 1
+        }
+      ],
+      "baselineExportCount": 610,
+      "exportCount": 757,
+      "missingExports": []
+    }
+  ],
+  "ciRun": "https://github.com/TheRealRickPrime/Quasar/actions/runs/40130234361",
+  "aarSHA256": "d9654b4d39526bcc915723a17edf2b82713732439b0da739f25818eb223f49bb",
+  "javaBinding": "Unchanged classes.jar from official lazysodium-android 5.1.0"
+}

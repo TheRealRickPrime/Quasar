@@ -14,6 +14,7 @@ from .widgets import run_task
 class AppContext(QObject):
     devices_changed = Signal(list)
     adb_changed = Signal()
+    license_changed = Signal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -29,6 +30,22 @@ class AppContext(QObject):
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.poll)
         self._timer.start(2500)
+        self._license_checking = False
+        self._license_timer = QTimer(self)
+        self._license_timer.timeout.connect(self._refresh_license)
+        self._license_timer.start(15 * 60 * 1000)
+
+    def _refresh_license(self) -> None:
+        if self._license_checking:
+            return
+        self._license_checking = True
+
+        def finished(_result=None):
+            self._license_checking = False
+            self.license_changed.emit()
+
+        run_task(lambda _report, _cancel: self.licensing.reload(),
+                 on_done=finished, on_failed=finished)
 
     def reload_adb(self) -> None:
         self.adb = Adb()

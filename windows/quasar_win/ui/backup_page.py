@@ -8,7 +8,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QHBoxLayout, QLineEdit,
                                QProgressBar, QPushButton, QStackedWidget, QTableWidget,
-                               QTableWidgetItem, QVBoxLayout, QWidget, QHeaderView)
+                               QTableWidgetItem, QVBoxLayout, QWidget, QHeaderView, QMessageBox)
 
 from .. import adb as adb_mod
 from .. import compression
@@ -16,6 +16,7 @@ from .. import encryption
 from ..cloud import make_provider
 from ..config import load_secret
 from ..pipeline import PipelineOptions, run_pipeline
+from ..privacy import DELETE_NOTICE, LEGAL_NOTICE
 from .context import AppContext
 from .widgets import card, fmt_size, fmt_time, label, page_header, run_task, set_status
 
@@ -292,6 +293,8 @@ class BackupWizard(QWidget):
         self.delete_raw.setChecked(True)
         for wdg in (self.enc_check, self.enc_level, self.pass1, self.pass2, self.delete_raw):
             lay.addWidget(wdg)
+        lay.addWidget(label("Deletion is not secure erase. Preserve legally required records. "
+                            "See Privacy & data for local/cloud deletion details.", "muted"))
         self.enc_check.toggled.connect(self._enc_toggled)
 
         self.upload_check = QCheckBox("Upload to cloud when finished")
@@ -489,6 +492,13 @@ class BackupWizard(QWidget):
                 set_status(self.pl_status, limit_msg, "bad")
                 return
         encrypt = self.enc_check.isChecked()
+        if encrypt and self.delete_raw.isChecked():
+            if QMessageBox.question(self, "Remove the unencrypted original?",
+                                    f"The unencrypted original at {self.raw_path} will be deleted after "
+                                    "the encrypted copy is verified. This does not delete cloud copies.\n\n"
+                                    + DELETE_NOTICE + "\n\n" + LEGAL_NOTICE,
+                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No) != QMessageBox.Yes:
+                return
         opts = PipelineOptions(
             compression=self.comp_method.currentData() or "", level=self.comp_level.currentData(),
             passphrase=self.pass1.text() if encrypt else "", security=self.enc_level.currentData(),

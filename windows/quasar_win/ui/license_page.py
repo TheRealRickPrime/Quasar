@@ -5,7 +5,8 @@ import threading
 
 from PySide6.QtCore import QObject, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QProgressBar, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (QHBoxLayout, QLineEdit, QMessageBox, QProgressBar, QPushButton,
+                               QScrollArea, QVBoxLayout, QWidget)
 
 from .. import COPYRIGHT, __version__, updater
 from .. import licensing as lic
@@ -24,7 +25,13 @@ class LicensePage(QWidget):
         super().__init__()
         self.setObjectName("page")
         self.ctx = ctx
-        root = QVBoxLayout(self)
+        outer = QVBoxLayout(self)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        content = QWidget()
+        root = QVBoxLayout(content)
+        scroll.setWidget(content)
+        outer.addWidget(scroll)
         root.addWidget(page_header("License", "Your plan, this month's usage and how to upgrade."))
 
         plan = card()
@@ -41,7 +48,8 @@ class LicensePage(QWidget):
         kl.addWidget(label("<b>Activate a license key</b>"))
         row = QHBoxLayout()
         self.key_edit = QLineEdit()
-        self.key_edit.setPlaceholderText("QSR1.…")
+        self.key_edit.setPlaceholderText("License key from your Gumroad receipt")
+        self.key_edit.setEchoMode(QLineEdit.Password)
         self.activate_btn = QPushButton("Activate")
         self.activate_btn.setObjectName("primary")
         self.activate_btn.clicked.connect(self._activate)
@@ -55,7 +63,10 @@ class LicensePage(QWidget):
         kl.addWidget(self.key_status)
         root.addWidget(key_box)
 
-        tiers = QHBoxLayout()
+        root.addWidget(label(f"Distribution: <b>{ctx.licensing.edition.label}</b>. "
+                             "Supporter and Pro packages still require a valid paid key. "
+                             "Free without ads remains available. Upload allowance is not hosted storage.", "muted"))
+        tiers = QVBoxLayout()
         for tier in lic.TIERS.values():
             box = card()
             bl = QVBoxLayout(box)
@@ -149,7 +160,7 @@ class LicensePage(QWidget):
 
     def _check_worker(self) -> None:
         try:
-            self._upd.checked.emit(updater.check(), "")
+            self._upd.checked.emit(updater.check(edition=self.ctx.licensing.edition), "")
         except Exception as exc:
             self._upd.checked.emit(None, str(exc) or exc.__class__.__name__)
 
@@ -207,6 +218,13 @@ class LicensePage(QWidget):
         set_status(self.update_status, text, "")
 
     def _remove(self) -> None:
+        if QMessageBox.question(self, "Remove local activation?",
+                                "This removes the license from this PC, not your Gumroad purchase, "
+                                "backups, cloud copies or monthly usage. You can activate it again with "
+                                "your receipt key.", QMessageBox.Yes | QMessageBox.No,
+                                QMessageBox.No) != QMessageBox.Yes:
+            return
         self.ctx.licensing.deactivate()
-        set_status(self.key_status, "License removed. Back on the Free plan.", "")
+        set_status(self.key_status, f"License removed. Back on the {self.ctx.licensing.tier.name} plan. "
+                   "Monthly usage is unchanged.", "")
         self.refresh()

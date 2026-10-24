@@ -47,11 +47,8 @@ def test_expired_key_rejected(keys):
         lic.verify_key(make_license.make_key("pro", "a@b.c", "2020-01-01", priv), pub)
 
 
-def test_embedded_public_key_matches_seller_key():
-    real = Path(make_license.DEFAULT_KEY)
-    if not real.exists():
-        pytest.skip("seller private key not on this machine")
-    assert lic.verify_key(make_license.make_key("supporter", "t@t.t", private_key=real)).tier == "supporter"
+def test_embedded_public_key_is_ed25519():
+    assert len(base64.b64decode(lic.PUBLIC_KEY_B64)) == 32
 
 
 def test_free_limits_and_upgrade(tmp_path, keys):
@@ -93,6 +90,7 @@ def test_license_next_to_exe_is_picked_up(tmp_path, keys, monkeypatch):
 
 
 class _Resp:
+    status_code = 200
     def __init__(self, data):
         self._d = data
 
@@ -104,9 +102,9 @@ def test_gumroad_activation_and_refund(tmp_path, monkeypatch):
     import requests
 
     def post(url, data=None, timeout=0):
-        if data["license_key"] == "GOOD" and data["product_permalink"] == "qwjtj":
+        if data["license_key"] == "GOOD" and data["product_id"] == "9R_AkG7S8By0ZotuYyM1Lg==":
             return _Resp({"success": True, "purchase": {"email": "b@x.y", "id": "abcdefghij", "short_product_id": "qwjtj"}})
-        if data["license_key"] == "REFUND" and data["product_permalink"] == "qygwf":
+        if data["license_key"] == "REFUND" and data["product_id"] == "7sQ_4QWbmr1Miy5LYzh-Bw==":
             return _Resp({"success": True, "purchase": {"refunded": True, "short_product_id": "qygwf"}})
         return _Resp({"success": False})
 
@@ -132,3 +130,91 @@ def test_gumroad_offline_error(tmp_path, monkeypatch):
     with pytest.raises(lic.LicenseError, match="Couldn't reach"):
         lic.Licensing(tmp_path).activate("ANY")
 
+
+def test_distribution_is_not_a_paid_entitlement_and_usage_carries(tmp_path, keys):
+    from quasar_win.editions import Edition
+    priv, pub = keys
+    for edition in (Edition.SUPPORTER, Edition.PRO):
+        assert lic.Licensing(tmp_path, pub, edition).tier.key == "free"
+    free = lic.Licensing(tmp_path, pub, Edition.FREE)
+    for _ in range(6):
+        free.record_backup()
+    free.record_upload(lic.GB)
+    ads = lic.Licensing(tmp_path, pub, Edition.FREE_ADS)
+    assert ads.tier.backups_per_month == 10
+    assert ads.tier.upload_gb_per_month == 2 and ads.upload_used == lic.GB
+    assert ads.show_affiliates and ads.backups_used == 6 and not ads.check_backup()
+    for _ in range(4):
+        ads.record_backup()
+    assert "10 backups" in ads.check_backup()
+    ads.activate(make_license.make_key("supporter", "synthetic@example.invalid", private_key=priv))
+    assert not ads.show_affiliates and ads.backups_used == 10
+    paid = lic.Licensing(tmp_path, pub, Edition.PRO)
+    assert paid.tier.key == "supporter" and paid.backups_used == 10
+    paid.deactivate()
+    assert "6 backups" in paid.check_backup() and paid.upload_used == lic.GB
+
+
+def test_imported_legacy_license_survives_update_but_not_deactivation(tmp_path, keys, monkeypatch):
+    priv, pub = keys
+    exe = tmp_path / "old-install"
+    exe.mkdir()
+    key = make_license.make_key("pro", "synthetic@example.invalid", private_key=priv)
+    (exe / "license.key").write_text(key)
+    monkeypatch.setattr(lic, "_exe_dir", lambda: exe)
+    data = tmp_path / "appdata"
+    manager = lic.Licensing(data, pub)
+    assert (data / "license.key").read_text() == key
+    (exe / "license.key").unlink()
+    assert lic.Licensing(data, pub).tier.key == "pro"
+    (exe / "license.key").write_text(key)
+    manager.deactivate()
+    assert lic.Licensing(data, pub).tier.key == "free"
+
+
+def test_recheck_offline_expiry_refund_and_product_identity(tmp_path, monkeypatch):
+    import requests
+    now = [1_780_000_000.0]
+    monkeypatch.setattr(lic.time, "time", lambda: now[0])
+    response = {"success": True, "purchase": {"product_id": "7sQ_4QWbmr1Miy5LYzh-Bw=="}}
+    def post(*args, **kwargs):
+        if response is None:
+            raise requests.ConnectionError()
+        return _Resp(response)
+    monkeypatch.setattr(requests, "post", post)
+    manager = lic.Licensing(tmp_path)
+    manager.activate("SYNTHETIC-TEST-ONLY")
+    response = None
+    now[0] += 10 * 86400
+    assert lic.Licensing(tmp_path).tier.key == "supporter"
+    now[0] += 21 * 86400
+    assert manager.tier.key == "free"
+    assert lic.Licensing(tmp_path).tier.key == "free"
+    response = {"success": True, "purchase": {"short_product_id": "qygwf", "refunded": True}}
+    assert lic.Licensing(tmp_path).tier.key == "free"
+    response = None
+    assert lic.Licensing(tmp_path).tier.key == "free"
+    response = {"success": True, "purchase": {"product_id": "unrelated", "short_product_id": "qwjtj"}}
+    with pytest.raises(lic.LicenseError, match="wasn't found"):
+        manager.activate("SYNTHETIC-TEST-ONLY")
+
+
+def test_rechecks_only_when_due_and_handles_invalid_cache(tmp_path, monkeypatch):
+    import requests
+    now = [1_780_000_000.0]
+    monkeypatch.setattr(lic.time, "time", lambda: now[0])
+    calls = []
+    def post(*args, **kwargs):
+        calls.append(kwargs["data"])
+        return _Resp({"success": True, "purchase": {"product_id": "7sQ_4QWbmr1Miy5LYzh-Bw=="}})
+    monkeypatch.setattr(requests, "post", post)
+    manager = lic.Licensing(tmp_path)
+    manager.activate("SYNTHETIC-TEST-ONLY")
+    assert calls[0]["increment_uses_count"] == "true"
+    now[0] += 2 * 86400
+    assert lic.Licensing(tmp_path).tier.key == "supporter" and len(calls) == 1
+    now[0] += 86400
+    assert lic.Licensing(tmp_path).tier.key == "supporter" and len(calls) == 2
+    assert calls[-1]["increment_uses_count"] == "false"
+    (tmp_path / "gumroad.json").write_text("[]")
+    assert lic.Licensing(tmp_path).tier.key == "supporter" and len(calls) == 3

@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 
 from quasar_win import updater
+from quasar_win.editions import Edition
 
 
 def _resp(data):
@@ -13,7 +14,7 @@ def _resp(data):
     return m
 
 
-MANIFEST = {"version": "0.4.0", "windows": {"url": "http://x/q.zip", "sha256": "ab"}}
+MANIFEST = {"version": "0.4.0", "windows": {"url": "https://example.invalid/q.zip", "sha256": "a" * 64}}
 
 
 def test_newer_version_detected():
@@ -38,3 +39,30 @@ def test_download_rejects_bad_hash():
     entry["sha256"] = hashlib.sha256(b"data").hexdigest()
     with mock.patch("requests.get", return_value=resp):
         assert updater.download(entry).read_bytes() == b"data"
+
+
+def test_editions_and_platform_versions():
+    data = {"schemaVersion": 2, "version": "9.0.0", "windows": {
+        "version": "0.4.0", "editions": {
+            e.value: {"version": "0.4.0", "url": f"https://example.invalid/{e.value}.zip", "sha256": "b" * 64}
+            for e in Edition}}}
+    for edition in Edition:
+        entry = updater.parse_manifest(data, "0.3.3", edition)
+        assert entry["url"].endswith(f"/{edition.value}.zip")
+        assert entry["version"] == "0.4.0"
+        assert updater.parse_manifest(data, "0.4.0", edition) is None
+    del data["windows"]["editions"]["pro"]
+    with pytest.raises(updater.UpdateError):
+        updater.parse_manifest(data, "0.3.3", Edition.PRO)
+    with pytest.raises(updater.UpdateError):
+        updater.parse_manifest(MANIFEST, "0.3.3", Edition.FREE_ADS)
+
+
+@pytest.mark.parametrize("name", ["../Quasar.exe", "Quasar/license.key", "C:/Quasar.exe"])
+def test_stage_rejects_unsafe_or_personal_files(tmp_path, name):
+    import zipfile
+    path = tmp_path / "update.zip"
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr(name, b"not executable")
+    with pytest.raises(updater.UpdateError):
+        updater.stage(path)

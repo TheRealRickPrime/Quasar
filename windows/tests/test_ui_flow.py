@@ -47,6 +47,8 @@ def window(tmp_path, monkeypatch):
     app = QApplication.instance() or QApplication([])
     from quasar_win.adb import Adb
     from quasar_win.ui.main_window import MainWindow
+    from PySide6.QtWidgets import QMessageBox
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.Yes)
 
     fake = tmp_path / "adb.bat"
     fake.write_text(FAKE_ADB)

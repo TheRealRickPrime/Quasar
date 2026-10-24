@@ -1,0 +1,45 @@
+Quasar Android native components
+===============================
+
+Quasar's commercial distribution terms do not replace the rights granted by
+the following third-party licenses. Quasar Labs alone supplies Quasar support;
+these upstream projects do not endorse or warrant Quasar.
+
+Lazysodium Android 5.1.0 - Terl Tech Ltd - Mozilla Public License 2.0
+The original Java binding is unchanged. Full license: LICENSE.lazysodium.
+Corresponding source is available without charge:
+https://repo.maven.apache.org/maven2/com/goterl/lazysodium-android/5.1.0/lazysodium-android-5.1.0-sources.jar
+https://github.com/terl/lazysodium-android
+Only the separately licensed native libsodium libraries have been replaced.
+No restriction in Quasar's terms limits rights in this MPL-covered source.
+
+Libsodium 1.0.22 - Frank Denis and contributors - ISC license
+Full copyright and permission notice: LICENSE.libsodium.
+Official corresponding source:
+https://download.libsodium.org/libsodium/releases/libsodium-1.0.22.tar.gz
+Source SHA256: adbdd8f16149e81ac6078a03aca6fc03b592b89ef7b5ed83841c086191be3349
+Release tag: 1.0.22-RELEASE; commit: 77e1ce5d6dee871c49ef211222ba18ef0c486bda
+Build/provenance scripts:
+https://github.com/TheRealRickPrime/Quasar/tree/main/android/tools
+Exact native build hashes, flags and export checks: NATIVE-PROVENANCE.json.
+QSR1 format and original Java binding are retained. No Android runtime
+execution is implied by host crypto tests or static alignment verification.
+
+Zstd JNI 1.5.7-4 - Luben Karavelov and contributors - BSD 2-Clause license
+Full notice: LICENSE.zstd-jni.
+https://github.com/luben/zstd-jni/tree/v1.5.7-4
+https://repo.maven.apache.org/maven2/com/github/luben/zstd-jni/1.5.7-4/zstd-jni-1.5.7-4-sources.jar
+Zstandard itself is Copyright Meta Platforms, Inc. and affiliates,
+BSD 3-Clause licensed. Full notice: LICENSE.zstd.
+https://github.com/facebook/zstd/tree/v1.5.7
+
+JNA 5.19.1 - JNA contributors - Apache License 2.0 (chosen dual-license option)
+Full license: LICENSE.Apache-2.0.
+https://github.com/java-native-access/jna/tree/5.19.1
+https://repo.maven.apache.org/maven2/net/java/dev/jna/jna/5.19.1/jna-5.19.1-sources.jar
+
+Other Android application dependencies include AndroidX, Material Components,
+Gson, OkHttp, Apache Commons Compress, Zip4j (Apache License 2.0), and XZ for
+Java (public domain). Source declarations and exact dependency versions:
+https://github.com/TheRealRickPrime/Quasar/blob/main/android/app/build.gradle.kts
+Windows Python/Qt dependencies retain their bundled licensing files.

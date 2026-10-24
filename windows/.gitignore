@@ -6,3 +6,4 @@ private.key
 *.spec
 __pycache__/
 .pytest_cache/
+.pyinstaller-cache/

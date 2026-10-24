@@ -21,10 +21,11 @@ from .home_page import HomePage
 from .image_page import ImagePage
 from .lab_page import LabPage
 from .license_page import LicensePage
+from .privacy_page import PrivacyPage
 from .widgets import SpaceBackground
 
 NAV = ["◉  Home", "⬡  Guided Backup", "◈  Compression Lab", "☁  Cloud Upload", "☺  Account", "▣  Android App",
-       "✦  Full Phone Image", "★  License"]
+       "✦  Full Phone Image", "★  License", "Privacy & data"]
 
 
 class MainWindow(QMainWindow):
@@ -63,7 +64,7 @@ class MainWindow(QMainWindow):
         self.nav.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         for text in NAV:
             self.nav.addItem(QListWidgetItem(text))
-        version = QLabel(f"v{__version__}")
+        version = QLabel(f"v{__version__} · {self.ctx.licensing.edition.label}")
         version.setObjectName("muted")
         version.setAlignment(Qt.AlignCenter)
         for item in (logo, name, tag):
@@ -78,7 +79,8 @@ class MainWindow(QMainWindow):
         self.home.navigate.connect(self.nav.setCurrentRow)
         self.cloud = CloudPage(self.ctx)
         for page in (self.home, BackupWizard(self.ctx), LabPage(self.ctx), self.cloud,
-                     AccountPage(self.ctx), AppPage(self.ctx), ImagePage(self.ctx), LicensePage(self.ctx)):
+                     AccountPage(self.ctx), AppPage(self.ctx), ImagePage(self.ctx), LicensePage(self.ctx),
+                     PrivacyPage(self.ctx)):
             self.pages.addWidget(page)
         holder = QWidget()
         hl = QVBoxLayout(holder)

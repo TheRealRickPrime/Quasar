@@ -23,12 +23,14 @@ private const val FAIL = """{"success":false,"message":"That license does not ex
 
 class LicenseManagerTest {
     private var now = 1_760_000_000_000L
-    private fun mgr(http: HttpPoster, store: KeyValueStore = MemoryStore()) =
-        LicenseManager(http, store, { now }, ZoneOffset.UTC)
+    private fun mgr(http: HttpPoster, store: KeyValueStore = MemoryStore(), edition: Edition = Edition.FREE) =
+        LicenseManager(http, store, { now }, ZoneOffset.UTC, edition)
 
     @Test fun tierLimits() {
         assertEquals(6, Tier.FREE.backupsPerMonth)
         assertEquals(2L * 1024 * 1024 * 1024, Tier.FREE.uploadBytesPerMonth)
+        assertEquals(10, Tier.FREE_ADS.backupsPerMonth)
+        assertEquals(Tier.FREE.uploadBytesPerMonth, Tier.FREE_ADS.uploadBytesPerMonth)
         assertEquals(15, Tier.SUPPORTER.backupsPerMonth)
         assertEquals(30L * 1024 * 1024 * 1024, Tier.SUPPORTER.uploadBytesPerMonth)
         assertNull(Tier.PRO.backupsPerMonth)
@@ -61,24 +63,22 @@ class LicenseManagerTest {
     }
 
     @Test fun activatesSupporterAndProIsUnlimited() {
-        val m = mgr(FakeHttp { f -> if (f["product_permalink"] == "qygwf") ok("qygwf") else FAIL })
+        val m = mgr(FakeHttp { f -> if (f["product_id"] == "7sQ_4QWbmr1Miy5LYzh-Bw==") ok("qygwf") else FAIL })
         assertNull(m.activate("KEY"))
         assertEquals(Tier.SUPPORTER, m.currentTier())
         repeat(15) { m.recordBackup() }
         assertFalse(m.canStartBackup().allowed)
 
-        val pro = mgr(FakeHttp { f -> if (f["product_permalink"] == "qwjtj") ok("qwjtj") else FAIL })
+        val pro = mgr(FakeHttp { f -> if (f["product_id"] == "9R_AkG7S8By0ZotuYyM1Lg==") ok("qwjtj") else FAIL })
         assertNull(pro.activate("KEY"))
         repeat(100) { pro.recordBackup() }
         assertTrue(pro.canStartBackup().allowed)
     }
 
-    @Test fun retriesWithProductIdHintAndMapsByShortId() {
+    @Test fun usesExactProductIdsAndMapsVerifiedIdentity() {
         val http = FakeHttp { f ->
             when {
-                f.containsKey("product_permalink") ->
-                    """{"success":false,"message":"The 'product_id' parameter is required. Please set 'product_id' to 'ABC123==' in the request."}"""
-                f["product_id"] == "ABC123==" -> ok("qwjtj")
+                f["product_id"] == "9R_AkG7S8By0ZotuYyM1Lg==" -> ok("qwjtj")
                 else -> FAIL
             }
         }
@@ -86,6 +86,7 @@ class LicenseManagerTest {
         assertEquals(VerifyResult.Valid("KEY", Tier.PRO, "a@b.c"), r)
         assertEquals("false", http.calls.last()["increment_uses_count"])
         assertEquals("KEY", http.calls.last()["license_key"])
+        assertEquals(LicenseManager.PRODUCT_IDS.keys.toList(), http.calls.map { it["product_id"] })
     }
 
     @Test fun rejectsBadPurchases() {
@@ -127,5 +128,52 @@ class LicenseManagerTest {
         m.activate("K")
         m.deactivate()
         assertEquals(Tier.FREE, m.currentTier())
+    }
+
+    @Test fun switchingDistributionsKeepsLicenseAndUsageAndCannotUnlockPaid() {
+        val store = MemoryStore()
+        val http = FakeHttp { ok("qygwf") }
+        val free = mgr(http, store)
+        repeat(6) { free.recordBackup() }
+        free.recordUpload(1024L)
+        assertFalse(free.canStartBackup().allowed)
+        val ads = mgr(http, store, Edition.FREE_ADS)
+        assertEquals(6, ads.backupsUsed())
+        assertTrue(ads.canStartBackup().allowed)
+        repeat(4) { ads.recordBackup() }
+        assertFalse(ads.canStartBackup().allowed)
+        assertTrue(Edition.FREE_ADS.showsAffiliates(ads.currentTier()))
+        for (edition in listOf(Edition.SUPPORTER, Edition.PRO)) {
+            assertEquals(Tier.FREE, mgr(http, store, edition).currentTier())
+        }
+        assertNull(ads.activate("SYNTHETIC-TEST-ONLY"))
+        assertFalse(Edition.FREE_ADS.showsAffiliates(ads.currentTier()))
+        val paid = mgr(http, store, Edition.PRO)
+        assertEquals(Tier.SUPPORTER, paid.currentTier())
+        assertEquals(10, paid.backupsUsed())
+        paid.deactivate()
+        assertEquals(10, mgr(http, store).backupsUsed())
+        assertEquals(1024L, mgr(http, store).uploadUsedBytes())
+    }
+
+    @Test fun refundRevokesAndOfflineExpiryFallsBackToBundledFreeExperience() {
+        var body = ok("qygwf")
+        val store = MemoryStore()
+        val http = FakeHttp { body }
+        val ads = mgr(http, store, Edition.FREE_ADS)
+        ads.activate("SYNTHETIC-TEST-ONLY")
+        now += 31L * 24 * 3600 * 1000
+        assertEquals(Tier.FREE_ADS, ads.currentTier())
+        body = """{"success":true,"purchase":{"short_product_id":"qygwf","refunded":true}}"""
+        ads.refreshIfDue()
+        assertNull(ads.cachedLicense())
+        assertTrue(ads.edition.showsAffiliates(ads.currentTier()))
+    }
+
+    @Test fun conflictingProductIdentityIsRejected() {
+        val http = FakeHttp {
+            """{"success":true,"purchase":{"product_id":"unrelated","short_product_id":"qwjtj"}}"""
+        }
+        assertEquals(VerifyResult.NotFound, mgr(http).verify("SYNTHETIC-TEST-ONLY", false))
     }
 }

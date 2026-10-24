@@ -3,6 +3,7 @@ package com.quasar.mobile.licensing
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.google.gson.JsonParseException
 import java.io.IOException
 import java.time.Instant
 import java.time.ZoneId
@@ -12,6 +13,7 @@ private const val GB = 1024L * 1024L * 1024L
 
 enum class Tier(val label: String, val price: String, val backupsPerMonth: Int?, val uploadBytesPerMonth: Long?) {
     FREE("Free", "$0", 6, 2 * GB),
+    FREE_ADS("Free with Ads", "$0", 10, 2 * GB),
     SUPPORTER("Supporter", "$10", 15, 30 * GB),
     PRO("Pro", "$25 one-time", null, null),
 }
@@ -50,15 +52,19 @@ class LicenseManager(
     private val store: KeyValueStore,
     private val clock: () -> Long = { System.currentTimeMillis() },
     private val zone: ZoneId = ZoneId.systemDefault(),
+    val edition: Edition = Edition.FREE,
 ) {
     companion object {
         const val VERIFY_URL = "https://api.gumroad.com/v2/licenses/verify"
         val PERMALINKS = linkedMapOf("qygwf" to Tier.SUPPORTER, "qwjtj" to Tier.PRO)
+        val PRODUCT_IDS = linkedMapOf(
+            "7sQ_4QWbmr1Miy5LYzh-Bw==" to Tier.SUPPORTER,
+            "9R_AkG7S8By0ZotuYyM1Lg==" to Tier.PRO,
+        )
         const val RECHECK_MS = 3L * 24 * 3600 * 1000
         const val OFFLINE_GRACE_MS = 30L * 24 * 3600 * 1000
         const val MSG_NOT_FOUND = "That license key wasn't found. Check it and try again."
         const val MSG_NETWORK = "Couldn't reach the license server. Check your internet connection and try again."
-        private val PRODUCT_ID_HINT = Regex("'product_id' to '([^']+)'")
     }
 
     // ---- Gumroad verification ----
@@ -67,21 +73,26 @@ class LicenseManager(
         val licenseKey = key.trim()
         if (licenseKey.isEmpty()) return VerifyResult.NotFound
         try {
-            for (permalink in PERMALINKS.keys) {
-                var json = post(mapOf("product_permalink" to permalink), licenseKey, increment)
-                if (!json.success()) {
-                    val hint = PRODUCT_ID_HINT.find(json.str("message") ?: "")?.groupValues?.get(1)
-                    if (hint != null) json = post(mapOf("product_id" to hint), licenseKey, increment)
-                }
+            for ((productId, tier) in PRODUCT_IDS) {
+                val json = post(mapOf("product_id" to productId), licenseKey, increment)
                 if (!json.success()) continue
                 val purchase = json.getAsJsonObject("purchase") ?: continue
-                val tier = PERMALINKS[purchase.str("short_product_id")] ?: PERMALINKS[purchase.str("permalink")] ?: continue
+                val identities = listOfNotNull(
+                    purchase.str("product_id")?.let { PRODUCT_IDS[it] ?: Tier.FREE },
+                    purchase.str("short_product_id")?.let { PERMALINKS[it] ?: Tier.FREE },
+                    purchase.str("permalink")?.let { PERMALINKS[it] ?: Tier.FREE },
+                )
+                if (identities.isEmpty() || identities.any { it != tier }) continue
                 rejection(purchase)?.let { return VerifyResult.Rejected(it) }
                 return VerifyResult.Valid(licenseKey, tier, purchase.str("email") ?: "")
             }
         } catch (e: IOException) {
             return VerifyResult.NetworkError
-        } catch (e: RuntimeException) {
+        } catch (e: JsonParseException) {
+            return VerifyResult.NetworkError
+        } catch (e: IllegalStateException) {
+            return VerifyResult.NetworkError
+        } catch (e: IllegalArgumentException) {
             return VerifyResult.NetworkError
         }
         return VerifyResult.NotFound
@@ -127,6 +138,7 @@ class LicenseManager(
     fun cachedLicense(): LicenseInfo? {
         val key = store.get("lic_key") ?: return null
         val tier = store.get("lic_tier")?.let { runCatching { Tier.valueOf(it) }.getOrNull() } ?: return null
+        if (tier != Tier.SUPPORTER && tier != Tier.PRO) return null
         return LicenseInfo(key, tier, store.get("lic_email") ?: "", store.get("lic_checked")?.toLongOrNull() ?: 0L)
     }
 
@@ -139,8 +151,8 @@ class LicenseManager(
 
     /** Effective tier: cached license unless it has not been verified for 30 days. */
     fun currentTier(): Tier {
-        val l = cachedLicense() ?: return Tier.FREE
-        return if (clock() - l.checkedAt > OFFLINE_GRACE_MS) Tier.FREE else l.tier
+        val l = cachedLicense() ?: return edition.baseTier
+        return if (clock() - l.checkedAt >= OFFLINE_GRACE_MS || l.checkedAt > clock()) edition.baseTier else l.tier
     }
 
     /** Re-verifies online when the cached check is 3+ days old. Call off the main thread. */
@@ -184,14 +196,16 @@ class LicenseManager(
     }
 
     fun canUpload(bytes: Long): Check {
+        require(bytes >= 0) { "Upload size cannot be negative." }
         val tier = currentTier()
         val limit = tier.uploadBytesPerMonth ?: return Check(true)
-        return if (uploadUsedBytes() + bytes > limit) {
+        return if (bytes > limit - uploadUsedBytes()) {
             Check(false, "${tier.label} plan limit reached: ${limit / GB} GB of cloud upload this month. Upgrade on the License page.")
         } else Check(true)
     }
 
     fun recordUpload(bytes: Long) {
+        require(bytes >= 0) { "Upload size cannot be negative." }
         store.put("usage_upload", (uploadUsedBytes() + bytes).toString())
     }
 }

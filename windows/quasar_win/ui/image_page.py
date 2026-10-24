@@ -450,6 +450,13 @@ class ImagePage(QWidget):
         adb, serial, allow = self.ctx.adb, self._serial(), self.bootchain_box.isChecked()
         if not (names and access):
             return
+        from ..privacy import DELETE_NOTICE, LEGAL_NOTICE
+        if QMessageBox.question(self, "Overwrite phone partitions?",
+                                f"Restore will overwrite {', '.join(names)} on the selected phone. "
+                                "Existing data in those partitions can be lost.\n\n" + DELETE_NOTICE +
+                                "\n\n" + LEGAL_NOTICE, QMessageBox.Yes | QMessageBox.No,
+                                QMessageBox.No) != QMessageBox.Yes:
+            return
         self._busy(True)
         self.log.appendPlainText(f"Restoring {', '.join(names)} (access: {access.label})")
 

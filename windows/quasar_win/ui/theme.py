@@ -4,7 +4,7 @@ NAVY = "#0E1B2A"
 MIDNIGHT = "#070B14"
 PAPER = "#F5F5F3"
 STEEL = "#B0B7C0"
-SOFT = "#8A8F98"
+SOFT = "#ADB6C6"
 RED = "#D52B1E"
 RED_GLOW = "#FF4A3A"
 CYAN = "#46E1FF"
@@ -24,8 +24,12 @@ QLabel#muted {{ color: {SOFT}; }}
 QLabel#good {{ color: {GOOD}; }}
 QLabel#warn {{ color: {WARN}; }}
 QLabel#bad {{ color: {RED_GLOW}; }}
-QFrame#card {{ background: rgba(16, 27, 46, 215); border: 1px solid rgba(70, 225, 255, 55);
+QFrame#card {{ background: qlineargradient(x1:0, y1:0, x2:0.8, y2:1,
+               stop:0 rgba(24, 38, 60, 245), stop:1 rgba(13, 23, 40, 245));
+               border: 1px solid rgba(139, 182, 210, 65);
                border-radius: 12px; }}
+QScrollArea {{ background: transparent; border: none; }}
+QScrollArea > QWidget > QWidget {{ background: transparent; }}
 QFrame#sidebar {{ background: rgba(7, 11, 20, 235); border-right: 1px solid rgba(70, 225, 255, 40); }}
 QListWidget#nav {{ background: transparent; border: none; outline: none; }}
 QListWidget#nav::item {{ padding: 11px 16px; border-radius: 8px; margin: 2px 8px; color: {STEEL}; }}
@@ -43,6 +47,7 @@ QLineEdit, QComboBox, QSpinBox, QPlainTextEdit {{ background: rgba(7, 11, 20, 22
     border: 1px solid rgba(176, 183, 192, 90); border-radius: 7px; padding: 6px 8px;
     selection-background-color: {VIOLET}; }}
 QLineEdit:focus, QComboBox:focus {{ border-color: {CYAN}; }}
+QPushButton:focus {{ border: 2px solid {CYAN}; }}
 QComboBox QAbstractItemView {{ background: {NAVY}; selection-background-color: {VIOLET}; }}
 QCheckBox {{ spacing: 9px; background: transparent; }}
 QCheckBox::indicator {{ width: 18px; height: 18px; border-radius: 5px;

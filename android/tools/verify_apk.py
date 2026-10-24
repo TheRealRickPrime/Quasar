@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import struct
@@ -71,6 +72,7 @@ def inspect(apk: Path, sdk: Path, legacy: Path) -> dict:
                 relro = [s for s in segments if s["type"] == "GNU_RELRO"]
                 libraries.append({
                     "file": entry.filename, "abi": abi, "segments": segments,
+                    "sha256": hashlib.sha256(archive.read(entry)).hexdigest(),
                     "load16KB": bool(loads) and all(s["align"] >= 16384 and
                         (s["vaddr"] - s["offset"]) % 16384 == 0 for s in loads),
                     "relroPresent": bool(relro),
@@ -87,7 +89,8 @@ def inspect(apk: Path, sdk: Path, legacy: Path) -> dict:
                 raise ValueError(f"Missing {required} native dependency for {abi}")
     compatible = all(lib["load16KB"] and lib["relro16KB"] for lib in libraries if lib["pageSizeRelevant"])
     return {
-        "file": str(apk), "applicationId": package.group(1), "versionCode": int(package.group(2)),
+        "file": str(apk), "sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
+        "applicationId": package.group(1), "versionCode": int(package.group(2)),
         "version": package.group(3), "minSdk": int(minimum.group(1)), "targetSdk": int(target.group(1)),
         "signerSHA256": signer, "sameSignerAs032": True, "abis": by_abi,
         "zipalign16KB": "Verification successful" in alignment,
@@ -110,3 +113,5 @@ if __name__ == "__main__":
     for report in reports:
         print(f"{report['file']}: signer={report['signerSHA256']} ABIs={','.join(report['abis'])} "
               f"16KB_ELF={report['native16KBStaticCompatible']} zipalign={report['zipalign16KB']}")
+    if not all(r["native16KBStaticCompatible"] and r["zipalign16KB"] for r in reports):
+        raise SystemExit("Release blocked: a native ELF or APK 16 KB alignment check failed.")

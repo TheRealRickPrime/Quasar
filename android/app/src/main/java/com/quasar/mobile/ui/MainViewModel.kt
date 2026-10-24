@@ -21,6 +21,8 @@ import com.quasar.mobile.licensing.LicenseManager
 import com.quasar.mobile.licensing.OkHttpPoster
 import com.quasar.mobile.licensing.PrefsStore
 import com.quasar.mobile.licensing.Tier
+import com.quasar.mobile.licensing.Edition
+import com.quasar.mobile.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,7 +44,9 @@ fun formatBytes(b: Long): String {
 }
 
 class MainViewModel(private val app: Application) : AndroidViewModel(app) {
-    val licenses = LicenseManager(OkHttpPoster(), PrefsStore(app))
+    val edition = Edition.fromId(BuildConfig.EDITION)
+    val licenses = LicenseManager(OkHttpPoster(), PrefsStore(app), edition = edition)
+    val showAffiliates: Boolean get() = edition.showsAffiliates(tier)
 
     // License state (snapshot so Compose recomposes)
     var tier by mutableStateOf(licenses.currentTier()); private set
@@ -110,9 +114,19 @@ class MainViewModel(private val app: Application) : AndroidViewModel(app) {
     var labRows by mutableStateOf<List<LabRow>>(emptyList()); private set
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            licenses.refreshIfDue()
-            refreshLicense()
+        recheckLicense()
+    }
+
+    fun recheckLicense() {
+        if (licenseBusy) return
+        licenseBusy = true
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) { licenses.refreshIfDue() }
+                refreshLicense()
+            } finally {
+                licenseBusy = false
+            }
         }
     }
 
@@ -137,7 +151,7 @@ class MainViewModel(private val app: Application) : AndroidViewModel(app) {
     fun deactivate() {
         licenses.deactivate()
         refreshLicense()
-        licenseMessage = "License removed. You're on the Free plan."
+        licenseMessage = "License removed. You're on the ${tier.label} plan. Monthly usage is unchanged."
     }
 
     fun addSource(uri: Uri, folder: Boolean) {

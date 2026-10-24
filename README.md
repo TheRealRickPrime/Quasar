@@ -1,28 +1,50 @@
 # Quasar
 
-Quasar is a privacy-first Android backup application that guides users through a secure, authenticated backup workflow, cloud selection, and upload status tracking.
+Privacy-first backup tools from Quasar Labs: a Windows ADB backup/image companion
+and a standalone Android file backup, compression and encryption app.
 
-This repository contains:
-- Android app scaffolding for onboarding and backup setup
-- Python backend API architecture for auth, user profiles, backup sessions, and upload status
-- MongoDB-oriented data model and route design
-- Product design notes for the Quasar brand and workflow
+Product site and releases: **https://quasarli.github.io/quasar/**.
+Source for both applications lives here; the separate
+`QuasarLI/QuasarLI.github.io` repository owns the website and public release signing.
 
-## Repository structure
+| Distribution | Price | Backups/month | Upload allowance/month |
+|---|---|---|---|
+| Free | $0 | 6 | 2 GB |
+| Free with Ads | $0 | 10 | 2 GB |
+| Supporter | $10 | 15 | 30 GB |
+| Pro | $25 one-time | Unlimited | Unlimited |
 
-- `android/` — Android app skeleton (Kotlin + Jetpack Compose)
-- `backend/` — Python API skeleton (FastAPI + MongoDB-ready models)
-- `docs/` — product, system, and API design references
+An upload allowance is **not hosted storage**. Windows uploads to a destination
+you configure; Android saves through the system document picker and does not
+currently implement direct cloud uploads. Provider charges and retention apply.
+Free without ads remains available. The ads edition's optional, disclosed
+AdGuard affiliate cards appear only on **Privacy & data**, not backup/image/
+restore screens. No ad SDK or affiliate network request is made until you
+intentionally open an external link. A valid paid license suppresses all ads.
 
-## Intended flow
+Supporter and Pro ZIPs are labeled distributions, **not activated licenses**.
+Enter a genuine Gumroad receipt key on the License page. Packages never include
+buyer or owner keys. Purchases:
+[Supporter](https://quasarlabs3.gumroad.com/l/qygwf) /
+[Pro](https://quasarlabs3.gumroad.com/l/qwjtj).
 
-1. User signs up or logs in
-2. User selects their preferred cloud provider
-3. User follows the guided ADB backup workflow on Android
-4. Encrypted backup is created and uploaded
-5. Upload status is tracked and shown to the user in a profile/dashboard link
-6. User can later access backup metadata and link it to their profile
+## Project layout
 
-## Current status
+- `windows`: Python/PySide6 desktop app, tests, PyInstaller and release tools.
+- `android`: Kotlin/Compose app, same `com.quasar.mobile` ID for all editions.
+- `backend`: optional FastAPI account/session scaffold, not a supplied hosted service.
+- `docs`: format/design references, [data safety](docs/DATA-SAFETY.md),
+  [release contract](docs/RELEASING.md), and
+  [future emulator procedure on D:](docs/ANDROID-EMULATOR.md).
 
-This is an initial scaffold and direction-setting implementation, not a complete production app.
+Windows usage, configuration and activation remain in `%APPDATA%\Quasar`.
+Android updates share the existing private preferences and release signer.
+Switching packages or removing an activation does not reset monthly counters.
+See [Windows instructions](windows/README.md) and [Android instructions](android/README.md).
+
+Deletion is not secure erase. See **Privacy & data** in either app before
+deleting files or restoring over existing data. Preserve records subject to a
+legal hold, court order, audit/investigation or reasonably anticipated legal
+proceedings. Whether destruction is unlawful depends on jurisdiction, context
+and intent; ordinary authorized housekeeping is not automatically a crime.
+This is general information, not legal advice.
