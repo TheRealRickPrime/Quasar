@@ -75,6 +75,9 @@ maximum/common 16 KB page-size flags and RELRO. The original lazysodium 5.1.0
 Java binding and all baseline native exports are preserved. Host tests exercise
 the actual Kotlin QSR1 code with an independent known vector and corruption/
 boundary cases. See `android\native\README.md` and its provenance/test evidence.
+AndroidX graphics-path 1.0.1's native code is also rebuilt from its exact official
+release revision; Java/resources and the exported JNI API remain unchanged.
+Both native provenance reports and third-party notices accompany every ZIP.
 Zstd 1.5.7-4 preserves SDK 35 compatibility; 1.5.7-24 requires compile SDK 37.
 Zstd arm64 has no RELRO segment (a hardening caveat, not a bad boundary).
 Static verification is not Android runtime/device validation.

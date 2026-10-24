@@ -8,6 +8,10 @@ plugins {
 
 val unsignedRelease = providers.gradleProperty("unsignedRelease").orNull == "true"
 
+configurations.configureEach {
+    exclude(group = "androidx.graphics", module = "graphics-path")
+}
+
 android {
     namespace = "com.quasar.mobile"
     compileSdk = 35
@@ -114,6 +118,7 @@ dependencies {
 
     implementation("com.github.luben:zstd-jni:1.5.7-4@aar")
     implementation(files(rootProject.file("native/lazysodium-android-5.1.0-quasar.aar")))
+    implementation(files(rootProject.file("native/graphics-path-1.0.1-quasar.aar")))
     implementation("net.java.dev.jna:jna:5.19.1@aar")
 
     implementation("org.apache.commons:commons-compress:1.26.2")

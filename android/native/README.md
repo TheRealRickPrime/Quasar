@@ -14,6 +14,9 @@ binary or patched ELF header is used.
 The successful build and actual Kotlin host-format regression run:
 https://github.com/TheRealRickPrime/Quasar/actions/runs/40130234361
 
+An independent repeat run reproduced all four libsodium library SHA256s exactly:
+https://github.com/TheRealRickPrime/Quasar/actions/runs/40131975788
+
 The build runs upstream host `make check`, cross-compiles API 26 libraries for
 arm64-v8a, armeabi-v7a, x86_64 and x86, and verifies all 610 original exports
 remain. All rebuilt libraries have 16 KB LOAD alignment and aligned RELRO ends.
@@ -33,6 +36,30 @@ ELF boundaries and non-skipped test results. It emits a deterministic ZIP/AAR.
 Compare its SHA256 with `provenance.json`; reruns may have different native
 bytes if the hosted runner toolchain changes, so review provenance before
 updating the checked-in AAR. The pinned source/NDK and build scripts are retained.
+
+## AndroidX graphics-path
+
+`graphics-path-1.0.1-quasar.aar` preserves every original non-JNI member of
+the official Google Maven 1.0.1 AAR. Its three native C++ files are built from
+the exact release revision `8a05a22af450d589ef911d772a001a49dcb05b71`, linked
+from Google's [1.0.1 release notes](https://developer.android.com/jetpack/androidx/releases/graphics#graphics-path-1.0.1).
+NDK r28c uses both maximum/common page-size flags, RELRO/NOW and the unchanged
+upstream symbol map. Each ABI must retain the identical exported JNI API.
+No C++ source or Java binding is modified.
+
+The official Gitiles tar download generates variable per-file timestamps.
+`build_graphics.py` therefore pins the complete set of source filenames and each
+file's SHA256, not those archive headers. The official baseline AAR is separately
+SHA256-pinned. `graphics-provenance.json` records these pins, build flags, native
+hashes, exports and segment values. The manual `android-graphics.yml` workflow
+reproduces this native-only build; no signing credentials or device is involved.
+The successful four-ABI build:
+https://github.com/TheRealRickPrime/Quasar/actions/runs/40132804067
+Download its successful `quasar-graphics-16kb` artifact, validate with
+`python android\tools\build_graphics.py --verify --out <artifact-directory>`,
+then copy the verified AAR and provenance to this directory. A regular unsigned
+app CI build followed by original-key local signing/static checks is still
+required; a native-only artifact is not a finished APK.
 
 Zstd 1.5.7-4 and JNA 5.19.1 are still official Maven dependencies. Final APK
 verification independently checks their packaged ELF boundaries and ZIP

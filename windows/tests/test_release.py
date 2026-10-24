@@ -53,12 +53,15 @@ def test_eight_public_archives_match_their_edition_and_manifest(tmp_path):
     with pytest.raises(FileExistsError):
         release.package(dist, apk_root, out)
     native = json.loads((release.REPO / "android" / "native" / "provenance.json").read_text())
+    graphics = json.loads((release.REPO / "android" / "native" / "graphics-provenance.json").read_text())
     reports = [{
         "edition": edition.value, "sha256": manifest["android"]["editions"][edition.value]["apkSha256"],
         "sameSignerAs032": True, "native16KBStaticCompatible": True, "zipalign16KB": True,
         "runtimeDeviceTested": False,
         "nativeLibraries": [{"file": f"lib/{lib['abi']}/libsodium.so", "sha256": lib["sha256"]}
-                            for lib in native["libraries"]],
+                            for lib in native["libraries"]] +
+                           [{"file": f"lib/{lib['abi']}/libandroidx.graphics.path.so", "sha256": lib["sha256"]}
+                            for lib in graphics["libraries"]],
     } for edition in Edition]
     (out / "apk-verification.json").write_text(json.dumps(reports))
     assert len(verify_release.verify(out)["artifacts"]) == 8

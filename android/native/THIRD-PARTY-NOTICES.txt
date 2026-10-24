@@ -38,6 +38,15 @@ Full license: LICENSE.Apache-2.0.
 https://github.com/java-native-access/jna/tree/5.19.1
 https://repo.maven.apache.org/maven2/net/java/dev/jna/jna/5.19.1/jna-5.19.1-sources.jar
 
+AndroidX graphics-path 1.0.1 - The Android Open Source Project - Apache License 2.0
+Original Java/resources unchanged; only native code is rebuilt with alignment
+flags. Full license: LICENSE.Apache-2.0.
+Official Java source:
+https://dl.google.com/dl/android/maven2/androidx/graphics/graphics-path/1.0.1/graphics-path-1.0.1-sources.jar
+Official native source at the exact1.0.1 release revision:
+https://android.googlesource.com/platform/frameworks/support/+/8a05a22af450d589ef911d772a001a49dcb05b71/graphics/graphics-path/src/main/cpp/
+Exact source file hashes/build flags: GRAPHICS-NATIVE-PROVENANCE.json.
+
 Other Android application dependencies include AndroidX, Material Components,
 Gson, OkHttp, Apache Commons Compress, Zip4j (Apache License 2.0), and XZ for
 Java (public domain). Source declarations and exact dependency versions:

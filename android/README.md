@@ -44,6 +44,9 @@ The release gate requires 16 KB ELF LOAD/RELRO boundaries and APK ZIP alignment.
 The original Java 8-compatible lazysodium 5.1.0 binding is unchanged; only its
 native libraries are replaced by a pinned official libsodium 1.0.22 source
 rebuild with NDK r28c. All original exported symbols are retained.
+The transitive graphics-path 1.0.1 native library is similarly rebuilt from
+its exact official release revision, retaining the original Java/resources and
+identical JNI exports. No Compose/graphics Java version upgrade is needed.
 See [native provenance and reproduction](native/README.md).
 Zstd is pinned to 1.5.7-4 for the existing compile SDK; 1.5.7-24 requires API 37.
 Zstd's arm64 binary has no GNU_RELRO segment; this is a hardening limitation,
@@ -51,7 +54,7 @@ not a misaligned RELRO boundary. No binary-header workaround is applied.
 Static checks and host archive-format regressions are not Android runtime
 tests. No emulator/phone testing or universal compatibility is claimed.
 
-Zstd, libsodium and JNA are native dependencies, included for arm64-v8a,
+Zstd, libsodium, JNA and AndroidX graphics-path are native dependencies, included for arm64-v8a,
 armeabi-v7a, x86_64 and x86. Run `tools\verify_apk.py` with the Windows Python
 interpreter after building; it checks APK signatures against the historical
 release, SDK/version metadata, all native ABIs, ELF LOAD/RELRO alignment and

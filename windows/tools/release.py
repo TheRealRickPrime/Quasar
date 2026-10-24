@@ -78,7 +78,8 @@ def readme(platform: str, edition: Edition, apk_name: str) -> str:
         "3-day recheck interval, up to 30-day offline grace after a successful check. Refunds/disputes\n"
         "invalidate entitlement. Edition changes and license removal do not reset monthly counters.\n\n"
         "Android compatibility: 16 KB ELF LOAD/RELRO and APK ZIP alignment are statically checked.\n"
-        "Official libsodium was rebuilt from pinned source; the Java binding and QSR1 format remain.\n"
+        "Official libsodium and AndroidX graphics native code were rebuilt from pinned source;\n"
+        "their Java bindings and the QSR1 format remain unchanged.\n"
         "Zstd arm64 has no RELRO segment (a hardening caveat, not a misaligned boundary).\n"
         "Static checks/host crypto tests do not prove runtime/device compatibility. No emulator or\n"
         "physical-device testing is claimed. See NATIVE-PROVENANCE.json and third-party notices.\n\n"
@@ -150,6 +151,7 @@ def package(dist: Path, apk_root: Path, out: Path, version_code: int = 6) -> dic
             notice_root = "Quasar/" if platform == "Windows" else ""
             native = REPO / "android" / "native"
             for source, name in (("provenance.json", "NATIVE-PROVENANCE.json"),
+                                 ("graphics-provenance.json", "GRAPHICS-NATIVE-PROVENANCE.json"),
                                  ("LICENSE.libsodium", "LICENSE.libsodium"),
                                  ("LICENSE.lazysodium", "LICENSE.lazysodium"),
                                  ("LICENSE.zstd-jni", "LICENSE.zstd-jni"),

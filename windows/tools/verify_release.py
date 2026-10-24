@@ -23,15 +23,17 @@ def verify(out: Path) -> dict:
     if set(apks) != {e.value for e in Edition}:
         raise ValueError("Four APK verification reports are required.")
     native = json.loads((REPO / "android" / "native" / "provenance.json").read_text())
+    graphics = json.loads((REPO / "android" / "native" / "graphics-provenance.json").read_text())
     for report in apks.values():
         if not (report["sameSignerAs032"] and report["native16KBStaticCompatible"]
                 and report["zipalign16KB"] and not report["runtimeDeviceTested"]):
             raise ValueError("APK verification gate has not passed.")
-        for library in native["libraries"]:
-            matching = [lib for lib in report["nativeLibraries"]
-                        if lib["file"] == f"lib/{library['abi']}/libsodium.so"]
-            if len(matching) != 1 or matching[0]["sha256"] != library["sha256"]:
-                raise ValueError("Packaged libsodium differs from the verified native build.")
+        for metadata, filename in ((native, "libsodium.so"), (graphics, "libandroidx.graphics.path.so")):
+            for library in metadata["libraries"]:
+                matching = [lib for lib in report["nativeLibraries"]
+                            if lib["file"] == f"lib/{library['abi']}/{filename}"]
+                if len(matching) != 1 or matching[0]["sha256"] != library["sha256"]:
+                    raise ValueError(f"Packaged {filename} differs from its verified native build.")
     expected_sums = "".join(f"{a['sha256']}  {a['file']}\n" for a in artifacts)
     if (out / "SHA256SUMS.txt").read_text() != expected_sums:
         raise ValueError("Outer SHA256SUMS differs from artifacts metadata.")
@@ -82,6 +84,8 @@ def verify(out: Path) -> dict:
                     raise ValueError("Windows distribution identity mismatch.")
             if json.loads(archive.read(prefix + "NATIVE-PROVENANCE.json")) != native:
                 raise ValueError("Missing or incorrect native provenance.")
+            if json.loads(archive.read(prefix + "GRAPHICS-NATIVE-PROVENANCE.json")) != graphics:
+                raise ValueError("Missing or incorrect graphics native provenance.")
         checked.append({"file": path.name, "sha256": artifact["sha256"],
                         "bytes": artifact["bytes"], "embeddedApkSHA256": apk_hash})
         print(f"Verified {path.name}")
@@ -92,7 +96,7 @@ def verify(out: Path) -> dict:
               "allPayloadHashesVerified": True, "allApksSameOriginalSigner": True,
               "allApks16KBStaticVerified": True, "androidRuntimeDeviceTested": False,
               "sigstoreSigned": False, "published": False,
-              "nativeBuildRun": native["ciRun"]}
+              "nativeBuildRun": native["ciRun"], "graphicsBuildRun": graphics["ciRun"]}
     (out / "release-verification.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     return result
 
