@@ -1,0 +1,30 @@
+name: Rebuild official AndroidX graphics native library
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  graphics:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned NDK
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;28.2.13676358"
+      - name: Rebuild pinned official source and verify unchanged binding/export API
+        run: python3 android/tools/build_graphics.py --ndk "$ANDROID_HOME/ndk/28.2.13676358" --out "$RUNNER_TEMP/quasar-graphics"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: quasar-graphics-16kb
+          path: |
+            ${{ runner.temp }}/quasar-graphics/graphics-path-1.0.1-quasar.aar
+            ${{ runner.temp }}/quasar-graphics/graphics-provenance.json
+          if-no-files-found: error
+          retention-days: 30

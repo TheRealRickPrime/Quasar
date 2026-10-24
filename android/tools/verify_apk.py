@@ -72,7 +72,7 @@ def inspect(apk: Path, sdk: Path, legacy: Path) -> dict:
     edition, label = editions[flavor]
     if f"application-label:'{label}'" not in badging:
         raise ValueError("APK application label does not match its edition")
-    alignment = command(tools / "zipalign.exe", "-v", "-c", "-P", "16", "4", apk)
+    command(tools / "zipalign.exe", "-v", "-c", "-P", "16", "4", apk)
     libraries = []
     with zipfile.ZipFile(apk) as archive:
         for entry in archive.infolist():
@@ -106,7 +106,7 @@ def inspect(apk: Path, sdk: Path, legacy: Path) -> dict:
         "applicationId": package.group(1), "versionCode": int(package.group(2)),
         "version": package.group(3), "minSdk": int(minimum.group(1)), "targetSdk": int(target.group(1)),
         "signerSHA256": signer, "sameSignerAs032": True, "abis": by_abi,
-        "zipalign16KB": "Verification successful" in alignment,
+        "zipalign16KB": True,
         "native16KBStaticCompatible": compatible, "nativeLibraries": libraries,
         "runtimeDeviceTested": False,
     }
