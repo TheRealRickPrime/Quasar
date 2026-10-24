@@ -53,12 +53,14 @@ $python = "C:\Users\Inv11\AppData\Local\Programs\Python\Python312\python.exe"
   android\app\build\outputs\apk\pro\release\app-pro-release.apk `
   --out release-staging\0.4.0\apk-verification.json
 & $python windows\tools\release.py
+& $python windows\tools\verify_release.py
 ```
 
 The ignored staging directory is `D:\Quasar\release-staging\0.4.0`.
 Packaging refuses existing ZIPs and never deletes historic releases.
 After handoff, **do not modify ZIP bytes**. Give the website publisher
-`artifacts.json`, `latest.json`, `SHA256SUMS.txt`, `apk-verification.json` and
+`artifacts.json`, `latest.json`, `SHA256SUMS.txt`, `apk-verification.json`,
+`release-verification.json` and
 the eight ZIPs. Repackaging requires new hashes and fresh signatures.
 
 Static verification checks signer continuity, SDK/version/package metadata,

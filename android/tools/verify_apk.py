@@ -60,6 +60,18 @@ def inspect(apk: Path, sdk: Path, legacy: Path) -> dict:
         raise ValueError("Unexpected APK package/version")
     if not minimum or not target or (minimum.group(1), target.group(1)) != ("26", "35"):
         raise ValueError("Unexpected minimum/target SDK")
+    editions = {
+        "free": ("free", "Quasar Free"),
+        "freeAds": ("free-ads", "Quasar Free with Ads"),
+        "supporter": ("supporter", "Quasar Supporter"),
+        "pro": ("pro", "Quasar Pro"),
+    }
+    flavor = apk.parent.parent.name
+    if flavor not in editions:
+        raise ValueError("APK must be in its expected flavor/release directory")
+    edition, label = editions[flavor]
+    if f"application-label:'{label}'" not in badging:
+        raise ValueError("APK application label does not match its edition")
     alignment = command(tools / "zipalign.exe", "-v", "-c", "-P", "16", "4", apk)
     libraries = []
     with zipfile.ZipFile(apk) as archive:
@@ -90,6 +102,7 @@ def inspect(apk: Path, sdk: Path, legacy: Path) -> dict:
     compatible = all(lib["load16KB"] and lib["relro16KB"] for lib in libraries if lib["pageSizeRelevant"])
     return {
         "file": str(apk), "sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
+        "edition": edition, "applicationLabel": label,
         "applicationId": package.group(1), "versionCode": int(package.group(2)),
         "version": package.group(3), "minSdk": int(minimum.group(1)), "targetSdk": int(target.group(1)),
         "signerSHA256": signer, "sameSignerAs032": True, "abis": by_abi,

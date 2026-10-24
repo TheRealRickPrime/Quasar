@@ -8,6 +8,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 import release  # noqa: E402
+import verify_release  # noqa: E402
 from quasar_win.editions import Edition  # noqa: E402
 
 
@@ -51,6 +52,19 @@ def test_eight_public_archives_match_their_edition_and_manifest(tmp_path):
     assert "OWNER" not in (out / "SHA256SUMS.txt").read_text()
     with pytest.raises(FileExistsError):
         release.package(dist, apk_root, out)
+    native = json.loads((release.REPO / "android" / "native" / "provenance.json").read_text())
+    reports = [{
+        "edition": edition.value, "sha256": manifest["android"]["editions"][edition.value]["apkSha256"],
+        "sameSignerAs032": True, "native16KBStaticCompatible": True, "zipalign16KB": True,
+        "runtimeDeviceTested": False,
+        "nativeLibraries": [{"file": f"lib/{lib['abi']}/libsodium.so", "sha256": lib["sha256"]}
+                            for lib in native["libraries"]],
+    } for edition in Edition]
+    (out / "apk-verification.json").write_text(json.dumps(reports))
+    assert len(verify_release.verify(out)["artifacts"]) == 8
+    (out / "SHA256SUMS.txt").write_text("tampered")
+    with pytest.raises(ValueError, match="Outer SHA256SUMS"):
+        verify_release.verify(out)
 
 
 @pytest.mark.parametrize("name", ["license.key", "nested/private.key", "android-signing.properties", "OWNER.zip"])
