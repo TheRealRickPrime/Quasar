@@ -111,7 +111,7 @@ dependencies {
     }
 
     implementation("com.github.luben:zstd-jni:1.5.7-4@aar")
-    implementation("com.goterl:lazysodium-android:5.2.0@aar")
+    implementation("com.goterl:lazysodium-android:5.1.0@aar")
     implementation("net.java.dev.jna:jna:5.19.1@aar")
 
     implementation("org.apache.commons:commons-compress:1.26.2")

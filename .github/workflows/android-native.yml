@@ -27,9 +27,12 @@ jobs:
         run: |
           set -euo pipefail
           export JAVA_HOME="$JAVA_HOME_17_X64"
-          bash gradlew :app:testFreeReleaseUnitTest --tests 'com.quasar.mobile.engine.CryptoFormatTest' \
+          if ! bash gradlew :app:testFreeReleaseUnitTest --tests 'com.quasar.mobile.engine.CryptoFormatTest' \
             -PnativeCryptoTests=true -Pkotlin.compiler.execution.strategy=in-process \
-            --no-daemon --max-workers=2 --console=plain
+            --no-daemon --max-workers=2 --console=plain; then
+            cat app/build/test-results/testFreeReleaseUnitTest/TEST-*.xml
+            exit 1
+          fi
           cp -r app/build/test-results/testFreeReleaseUnitTest "$RUNNER_TEMP/quasar-native/kotlin-test-results"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:

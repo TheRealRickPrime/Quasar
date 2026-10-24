@@ -18,8 +18,8 @@ VERSION = "1.0.22"
 SOURCE_URL = f"https://download.libsodium.org/libsodium/releases/libsodium-{VERSION}.tar.gz"
 SOURCE_SHA256 = "adbdd8f16149e81ac6078a03aca6fc03b592b89ef7b5ed83841c086191be3349"
 SOURCE_COMMIT = "77e1ce5d6dee871c49ef211222ba18ef0c486bda"
-BASELINE_URL = "https://repo.maven.apache.org/maven2/com/goterl/lazysodium-android/5.2.0/lazysodium-android-5.2.0.aar"
-BASELINE_SHA256 = "b5378c1d9db2573d61b304e89cf83db187a05c3e4ff081d9b2ef3d0bb00ca314"
+BASELINE_URL = "https://repo.maven.apache.org/maven2/com/goterl/lazysodium-android/5.1.0/lazysodium-android-5.1.0.aar"
+BASELINE_SHA256 = "46a7e67681cc280b5f06dcbe6859d84ee341a6e7c50cd1cefe69495dee589617"
 ABIS = {
     "arm64-v8a": ("aarch64-linux-android", "aarch64-linux-android"),
     "armeabi-v7a": ("arm-linux-androideabi", "armv7a-linux-androideabi"),
@@ -55,7 +55,7 @@ def exports(nm: Path, library: Path) -> set[str]:
 def build(ndk: Path, out: Path) -> None:
     out.mkdir(parents=True, exist_ok=True)
     source = out / f"libsodium-{VERSION}.tar.gz"
-    baseline = out / "lazysodium-android-5.2.0.aar"
+    baseline = out / "lazysodium-android-5.1.0.aar"
     fetch(SOURCE_URL, source, SOURCE_SHA256)
     fetch(BASELINE_URL, baseline, BASELINE_SHA256)
     toolchain = ndk / "toolchains" / "llvm" / "prebuilt" / "linux-x86_64"
