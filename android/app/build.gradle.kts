@@ -14,10 +14,27 @@ android {
         applicationId = "com.quasar.mobile"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.3.2"
+        versionCode = 6
+        versionName = "0.4.0"
+        ndk { abiFilters += setOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86") }
     }
 
+    flavorDimensions += "edition"
+    productFlavors {
+        listOf("free" to "free", "freeAds" to "free-ads", "supporter" to "supporter", "pro" to "pro")
+            .forEach { (name, id) ->
+                create(name) {
+                    dimension = "edition"
+                    buildConfigField("String", "EDITION", "\"$id\"")
+                    resValue("string", "app_name", "Quasar " + when (id) {
+                        "free-ads" -> "Free with Ads"
+                        "supporter" -> "Supporter"
+                        "pro" -> "Pro"
+                        else -> "Free"
+                    })
+                }
+            }
+    }
     val signingProps = Properties().apply {
         val f = file(System.getenv("QUASAR_SIGNING_PROPERTIES") ?: "D:/Quasar-licensing/android-signing.properties")
         if (f.exists()) f.inputStream().use { load(it) }
@@ -36,7 +53,6 @@ android {
             isMinifyEnabled = false
             // Keystore and passwords live outside the repo; releases are never signed with the debug key.
             signingConfig = signingConfigs.findByName("release")
-                ?: throw GradleException("Release keystore not found. See QUASAR_SIGNING_PROPERTIES.")
         }
     }
 
@@ -45,11 +61,32 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
-    testOptions { unitTests.all { it.maxHeapSize = "1536m" } }
+    buildFeatures { compose = true; buildConfig = true }
+    testOptions {
+        unitTests.all {
+            it.maxHeapSize = "1536m"
+            if (providers.gradleProperty("nativeCryptoTests").orNull == "true") {
+                it.systemProperty("quasar.nativeTests", "true")
+                it.systemProperty("jna.library.path",
+                    File(System.getenv("QUASAR_NATIVE_TEST_LIBRARY")).parent)
+            }
+        }
+    }
     packaging {
+        jniLibs.useLegacyPackaging = false
         resources.excludes += setOf("META-INF/{AL2.0,LGPL2.1}", "META-INF/DEPENDENCIES", "META-INF/LICENSE*",
             "META-INF/NOTICE*", "META-INF/INDEX.LIST")
+    }
+}
+
+tasks.configureEach {
+    if (name.startsWith("package") && name.endsWith("Release")) {
+        doFirst {
+            check(System.getenv("QUASAR_SIGNING_PROPERTIES")?.let { file(it).isFile }
+                ?: file("D:/Quasar-licensing/android-signing.properties").isFile) {
+                "Release keystore configuration missing. See QUASAR_SIGNING_PROPERTIES."
+            }
+        }
     }
 }
 
@@ -69,10 +106,13 @@ dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation("junit:junit:4.13.2")
+    if (providers.gradleProperty("nativeCryptoTests").orNull == "true") {
+        testRuntimeOnly("net.java.dev.jna:jna:5.19.1")
+    }
 
-    implementation("com.github.luben:zstd-jni:1.5.6-5@aar")
-    implementation("com.goterl:lazysodium-android:5.1.0@aar")
-    implementation("net.java.dev.jna:jna:5.14.0@aar")
+    implementation("com.github.luben:zstd-jni:1.5.7-4@aar")
+    implementation("com.goterl:lazysodium-android:5.2.0@aar")
+    implementation("net.java.dev.jna:jna:5.19.1@aar")
 
     implementation("org.apache.commons:commons-compress:1.26.2")
     implementation("net.lingala.zip4j:zip4j:2.11.5")

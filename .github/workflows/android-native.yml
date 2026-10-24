@@ -1,0 +1,44 @@
+name: Build Android native compatibility libraries
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned NDK
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;28.2.13676358"
+      - name: Build official libsodium source and verify native exports/alignment
+        run: python3 android/tools/build_sodium.py --ndk "$ANDROID_HOME/ndk/28.2.13676358" --out "$RUNNER_TEMP/quasar-native"
+      - name: Test actual Kotlin archive format on host JVM
+        working-directory: android
+        env:
+          QUASAR_NATIVE_TEST_LIBRARY: ${{ runner.temp }}/quasar-native/host/lib/libsodium.so
+        run: |
+          set -euo pipefail
+          export JAVA_HOME="$JAVA_HOME_17_X64"
+          bash gradlew :app:testFreeReleaseUnitTest --tests 'com.quasar.mobile.engine.CryptoFormatTest' \
+            -PnativeCryptoTests=true -Pkotlin.compiler.execution.strategy=in-process \
+            --no-daemon --max-workers=2 --console=plain
+          cp -r app/build/test-results/testFreeReleaseUnitTest "$RUNNER_TEMP/quasar-native/kotlin-test-results"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: quasar-native-16kb
+          path: |
+            ${{ runner.temp }}/quasar-native/jni
+            ${{ runner.temp }}/quasar-native/LICENSE
+            ${{ runner.temp }}/quasar-native/build-report.json
+            ${{ runner.temp }}/quasar-native/SHA256SUMS.txt
+            ${{ runner.temp }}/quasar-native/kotlin-test-results
+          if-no-files-found: error
+          retention-days: 30
