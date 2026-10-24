@@ -36,7 +36,7 @@ android {
             }
     }
     val signingProps = Properties().apply {
-        val f = file(System.getenv("QUASAR_SIGNING_PROPERTIES") ?: "D:/Quasar-licensing/android-signing.properties")
+        val f = File(System.getenv("QUASAR_SIGNING_PROPERTIES") ?: "D:/Quasar-licensing/android-signing.properties")
         if (f.exists()) f.inputStream().use { load(it) }
     }
     signingConfigs {
@@ -82,8 +82,8 @@ android {
 tasks.configureEach {
     if (name.startsWith("package") && name.endsWith("Release")) {
         doFirst {
-            check(System.getenv("QUASAR_SIGNING_PROPERTIES")?.let { file(it).isFile }
-                ?: file("D:/Quasar-licensing/android-signing.properties").isFile) {
+            check(System.getenv("QUASAR_SIGNING_PROPERTIES")?.let { File(it).isFile }
+                ?: File("D:/Quasar-licensing/android-signing.properties").isFile) {
                 "Release keystore configuration missing. See QUASAR_SIGNING_PROPERTIES."
             }
         }
